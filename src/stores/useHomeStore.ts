@@ -76,6 +76,7 @@ interface HomeStore {
   removeMealPlan: (id: string) => void;
   addRecipe: (recipe: Recipe) => void;
   toggleReminder: (id: string) => void;
+  setUserName: (name: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>((set) => ({
