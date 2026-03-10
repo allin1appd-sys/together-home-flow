@@ -309,7 +309,7 @@ const Groceries = () => {
         <SheetContent side="bottom" className="rounded-t-2xl">
           <SheetHeader><SheetTitle>Add Grocery Item</SheetTitle></SheetHeader>
           <div className="space-y-4 pt-4 pb-6">
-            <Input placeholder="Item name" value={gName} onChange={(e) => setGName(e.target.value)} autoFocus />
+            <Input placeholder="Item name" value={gName} onChange={(e) => setGName(e.target.value)} />
             <div className="flex gap-2">
               <Input type="number" placeholder="Qty" value={gQty} onChange={(e) => setGQty(e.target.value)} className="w-20" />
               <Input placeholder="Unit (e.g. lbs, oz)" value={gUnit} onChange={(e) => setGUnit(e.target.value)} className="flex-1" />
