@@ -339,7 +339,7 @@ const Groceries = () => {
         <SheetContent side="bottom" className="rounded-t-2xl">
           <SheetHeader><SheetTitle>Add Shopping Item</SheetTitle></SheetHeader>
           <div className="space-y-4 pt-4 pb-6">
-            <Input placeholder="Item name" value={sName} onChange={(e) => setSName(e.target.value)} autoFocus />
+            <Input placeholder="Item name" value={sName} onChange={(e) => setSName(e.target.value)} />
             <div className="flex gap-2">
               <Input type="number" placeholder="Qty" value={sQty} onChange={(e) => setSQty(e.target.value)} className="w-20" />
               <Select value={sCategory} onValueChange={(v) => setSCategory(v as ShoppingCategory)}>

@@ -175,4 +175,4 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   addTrip: (trip) => set((s) => ({ trips: [trip, ...s.trips] })),
   updateTrip: (trip) => set((s) => ({ trips: s.trips.map((t) => t.id === trip.id ? trip : t) })),
   deleteTrip: (id) => set((s) => ({ trips: s.trips.filter((t) => t.id !== id) })),
-}));
+}), { name: 'homehub-store' }));
