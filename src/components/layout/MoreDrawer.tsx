@@ -1,0 +1,47 @@
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useNavigate } from 'react-router-dom';
+import { ShoppingBag, Bell, Wrench, StickyNote, Wallet, Settings } from 'lucide-react';
+
+const items = [
+  { path: '/shopping', label: 'Shopping List', icon: ShoppingBag },
+  { path: '/reminders', label: 'Reminders', icon: Bell },
+  { path: '/maintenance', label: 'Maintenance', icon: Wrench, disabled: true },
+  { path: '/notes', label: 'Notes', icon: StickyNote, disabled: true },
+  { path: '/budget', label: 'Budget', icon: Wallet, disabled: true },
+  { path: '/settings', label: 'Settings', icon: Settings, disabled: true },
+];
+
+interface Props {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}
+
+export function MoreDrawer({ open, onOpenChange }: Props) {
+  const navigate = useNavigate();
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+        <SheetHeader className="pb-2">
+          <SheetTitle className="text-lg">More</SheetTitle>
+        </SheetHeader>
+        <div className="grid grid-cols-3 gap-3 pt-2">
+          {items.map((item) => (
+            <button
+              key={item.path}
+              disabled={item.disabled}
+              onClick={() => {
+                navigate(item.path);
+                onOpenChange(false);
+              }}
+              className="flex flex-col items-center gap-2 rounded-xl bg-muted p-4 text-sm transition-colors hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <item.icon className="h-6 w-6 text-primary" />
+              <span className="font-medium text-foreground">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
