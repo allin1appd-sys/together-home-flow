@@ -149,6 +149,12 @@ export const useHomeStore = create<HomeStore>((set) => ({
   toggleReminder: (id) => set((s) => ({
     reminders: s.reminders.map((r) => r.id === id ? { ...r, isChecked: !r.isChecked } : r),
   })),
+  addReminder: (reminder) => set((s) => ({ reminders: [reminder, ...s.reminders] })),
+  updateReminder: (reminder) => set((s) => ({ reminders: s.reminders.map((r) => r.id === reminder.id ? reminder : r) })),
+  deleteReminder: (id) => set((s) => ({ reminders: s.reminders.filter((r) => r.id !== id) })),
+  snoozeReminder: (id, until) => set((s) => ({
+    reminders: s.reminders.map((r) => r.id === id ? { ...r, snoozedUntil: until } : r),
+  })),
   setUserName: (name) => set({ userName: name }),
   suggestToShoppingList: (groceryId) => set((s) => {
     const grocery = s.groceries.find((g) => g.id === groceryId);
