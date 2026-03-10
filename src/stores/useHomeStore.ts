@@ -94,7 +94,7 @@ interface HomeStore {
   deleteTrip: (id: string) => void;
 }
 
-export const useHomeStore = create<HomeStore>((set) => ({
+export const useHomeStore = create<HomeStore>()(persist((set) => ({
   tasks: mockTasks,
   groceries: mockGroceries,
   shoppingList: mockShoppingList,
