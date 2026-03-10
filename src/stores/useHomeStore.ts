@@ -76,6 +76,7 @@ interface HomeStore {
   removeMealPlan: (id: string) => void;
   addRecipe: (recipe: Recipe) => void;
   toggleReminder: (id: string) => void;
+  setUserName: (name: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>((set) => ({
@@ -113,4 +114,5 @@ export const useHomeStore = create<HomeStore>((set) => ({
   toggleReminder: (id) => set((s) => ({
     reminders: s.reminders.map((r) => r.id === id ? { ...r, isChecked: !r.isChecked } : r),
   })),
+  setUserName: (name) => set({ userName: name }),
 }));
