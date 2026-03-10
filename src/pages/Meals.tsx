@@ -6,17 +6,74 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Plus, X, ChevronLeft, ChevronRight, BookOpen, Copy, Trash2, ShoppingCart, AlertCircle } from 'lucide-react';
+import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { MealPlan, MealType, Recipe } from '@/types';
 import { format, addDays, startOfWeek } from 'date-fns';
+import { toast } from 'sonner';
 
 const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 const mealEmoji: Record<MealType, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍿' };
 
+const SWIPE_THRESHOLD = -80;
+
+const SwipeableMealCell = ({
+  meal,
+  type,
+  onTap,
+  onDelete,
+}: {
+  meal: MealPlan | undefined;
+  type: MealType;
+  onTap: () => void;
+  onDelete: () => void;
+}) => {
+  const x = useMotionValue(0);
+  const bgOpacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
+
+  if (!meal) {
+    return (
+      <button
+        onClick={onTap}
+        className="text-left rounded-lg p-2 text-xs transition-colors bg-muted/50 hover:bg-muted"
+      >
+        <span className="text-muted-foreground">{mealEmoji[type]} {type}</span>
+        <p className="text-muted-foreground mt-0.5">+ Add</p>
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-lg">
+      <motion.div
+        className="absolute inset-0 flex items-center justify-end pr-3 bg-destructive"
+        style={{ opacity: bgOpacity }}
+      >
+        <Trash2 className="h-4 w-4 text-destructive-foreground" />
+      </motion.div>
+      <motion.button
+        className="relative text-left rounded-lg p-2 text-xs bg-accent w-full"
+        style={{ x }}
+        drag="x"
+        dragConstraints={{ left: -120, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={(_: any, info: PanInfo) => {
+          if (info.offset.x < SWIPE_THRESHOLD) {
+            onDelete();
+          }
+        }}
+        onClick={onTap}
+      >
+        <span className="text-muted-foreground">{mealEmoji[type]} {type}</span>
+        <p className="font-medium mt-0.5 truncate text-foreground">{meal.customMealName}</p>
+      </motion.button>
+    </div>
+  );
+};
+
 const Meals = () => {
-  const { mealPlans, recipes, addMealPlan, removeMealPlan, addRecipe } = useHomeStore();
+  const { mealPlans, recipes, groceries, shoppingList, addMealPlan, removeMealPlan, updateMealPlan, copyLastWeekMeals, addRecipe, removeRecipe, addShoppingItem } = useHomeStore();
   const [weekOffset, setWeekOffset] = useState(0);
   const [mealSheet, setMealSheet] = useState(false);
   const [recipeSheet, setRecipeSheet] = useState(false);
@@ -24,6 +81,7 @@ const Meals = () => {
   const [selectedMealType, setSelectedMealType] = useState<MealType>('breakfast');
   const [mealName, setMealName] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
 
   // Recipe form
   const [rName, setRName] = useState('');
@@ -33,29 +91,58 @@ const Meals = () => {
 
   const weekStart = startOfWeek(addDays(new Date(), weekOffset * 7), { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekStartStr = format(weekStart, 'yyyy-MM-dd');
 
   const getMeal = (date: string, type: MealType) =>
     mealPlans.find((m) => m.date === date && m.mealType === type);
 
-  const openMealSheet = (date: string, type: MealType) => {
+  const openMealSheet = (date: string, type: MealType, existingMeal?: MealPlan) => {
     setSelectedDate(date);
     setSelectedMealType(type);
-    setMealName('');
-    setSelectedRecipeId('');
+    if (existingMeal) {
+      setEditingMealId(existingMeal.id);
+      setMealName(existingMeal.customMealName || '');
+      setSelectedRecipeId(existingMeal.recipeId || '');
+    } else {
+      setEditingMealId(null);
+      setMealName('');
+      setSelectedRecipeId('');
+    }
     setMealSheet(true);
   };
 
-  const handleAddMeal = () => {
+  const handleSaveMeal = () => {
     if (!mealName.trim() && !selectedRecipeId) return;
     const recipe = recipes.find((r) => r.id === selectedRecipeId);
-    addMealPlan({
-      id: Date.now().toString(),
-      date: selectedDate,
-      mealType: selectedMealType,
-      recipeId: selectedRecipeId || undefined,
-      customMealName: mealName.trim() || recipe?.name || '',
-    });
+    const name = mealName.trim() || recipe?.name || '';
+
+    if (editingMealId) {
+      updateMealPlan(editingMealId, {
+        recipeId: selectedRecipeId || undefined,
+        customMealName: name,
+      });
+    } else {
+      addMealPlan({
+        id: Date.now().toString(),
+        date: selectedDate,
+        mealType: selectedMealType,
+        recipeId: selectedRecipeId || undefined,
+        customMealName: name,
+      });
+    }
     setMealSheet(false);
+  };
+
+  const handleDeleteFromSheet = () => {
+    if (editingMealId) {
+      removeMealPlan(editingMealId);
+      setMealSheet(false);
+    }
+  };
+
+  const handleCopyLastWeek = () => {
+    copyLastWeekMeals(weekStartStr);
+    toast.success('Copied meals from last week');
   };
 
   const handleAddRecipe = () => {
@@ -74,6 +161,31 @@ const Meals = () => {
     setRecipeSheet(false);
   };
 
+  const getMissingIngredients = (recipe: Recipe) => {
+    const groceryNames = groceries.map((g) => g.name.toLowerCase());
+    return recipe.ingredients.filter((ing) => !groceryNames.includes(ing.name.toLowerCase()));
+  };
+
+  const addMissingToShoppingList = (recipe: Recipe) => {
+    const missing = getMissingIngredients(recipe);
+    let added = 0;
+    missing.forEach((ing) => {
+      const alreadyOnList = shoppingList.some((s) => s.name.toLowerCase() === ing.name.toLowerCase());
+      if (!alreadyOnList) {
+        addShoppingItem({
+          id: `sl-${Date.now()}-${Math.random()}`,
+          name: ing.name,
+          quantity: parseInt(ing.quantity) || 1,
+          category: 'other',
+          isPurchased: false,
+        });
+        added++;
+      }
+    });
+    if (added > 0) toast.success(`Added ${added} item${added > 1 ? 's' : ''} to shopping list`);
+    else toast.info('All items already on your list');
+  };
+
   return (
     <div className="px-4 pt-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -88,9 +200,14 @@ const Meals = () => {
         <Button size="icon" variant="ghost" onClick={() => setWeekOffset(weekOffset - 1)}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium">
-          {format(days[0], 'MMM d')} — {format(days[6], 'MMM d')}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">
+            {format(days[0], 'MMM d')} — {format(days[6], 'MMM d')}
+          </span>
+          <Button size="sm" variant="ghost" onClick={handleCopyLastWeek} className="gap-1 text-xs h-7 px-2">
+            <Copy className="h-3 w-3" /> Copy last week
+          </Button>
+        </div>
         <Button size="icon" variant="ghost" onClick={() => setWeekOffset(weekOffset + 1)}>
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -111,18 +228,13 @@ const Meals = () => {
                   {mealTypes.map((type) => {
                     const meal = getMeal(dateStr, type);
                     return (
-                      <button
+                      <SwipeableMealCell
                         key={type}
-                        onClick={() => meal ? removeMealPlan(meal.id) : openMealSheet(dateStr, type)}
-                        className={cn(
-                          'text-left rounded-lg p-2 text-xs transition-colors',
-                          meal ? 'bg-accent' : 'bg-muted/50 hover:bg-muted'
-                        )}
-                      >
-                        <span className="text-muted-foreground">{mealEmoji[type]} {type}</span>
-                        {meal && <p className="font-medium mt-0.5 truncate text-foreground">{meal.customMealName}</p>}
-                        {!meal && <p className="text-muted-foreground mt-0.5">+ Add</p>}
-                      </button>
+                        meal={meal}
+                        type={type}
+                        onTap={() => meal ? openMealSheet(dateStr, type, meal) : openMealSheet(dateStr, type)}
+                        onDelete={() => meal && removeMealPlan(meal.id)}
+                      />
                     );
                   })}
                 </div>
@@ -132,11 +244,13 @@ const Meals = () => {
         })}
       </div>
 
-      {/* Add Meal Sheet */}
+      {/* Add/Edit Meal Sheet */}
       <Sheet open={mealSheet} onOpenChange={setMealSheet}>
         <SheetContent side="bottom" className="rounded-t-2xl">
           <SheetHeader>
-            <SheetTitle>Add {selectedMealType} — {selectedDate && format(new Date(selectedDate + 'T12:00'), 'EEE, MMM d')}</SheetTitle>
+            <SheetTitle>
+              {editingMealId ? 'Edit' : 'Add'} {selectedMealType} — {selectedDate && format(new Date(selectedDate + 'T12:00'), 'EEE, MMM d')}
+            </SheetTitle>
           </SheetHeader>
           <div className="space-y-4 pt-4 pb-6">
             <Input placeholder="Meal name" value={mealName} onChange={(e) => setMealName(e.target.value)} autoFocus />
@@ -151,7 +265,14 @@ const Meals = () => {
                 </Select>
               </div>
             )}
-            <Button className="w-full" onClick={handleAddMeal}>Add Meal</Button>
+            <Button className="w-full" onClick={handleSaveMeal}>
+              {editingMealId ? 'Save Changes' : 'Add Meal'}
+            </Button>
+            {editingMealId && (
+              <Button variant="destructive" className="w-full" onClick={handleDeleteFromSheet}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete Meal
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -165,14 +286,42 @@ const Meals = () => {
           <div className="space-y-4 pt-4 pb-6">
             {recipes.length > 0 && (
               <div className="space-y-2">
-                {recipes.map((r) => (
-                  <Card key={r.id}>
-                    <CardContent className="p-3">
-                      <p className="text-sm font-medium">{r.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{r.prepTime} min · {r.tags.join(', ')}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                {recipes.map((r) => {
+                  const missing = getMissingIngredients(r);
+                  return (
+                    <Card key={r.id}>
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{r.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{r.prepTime} min · {r.tags.join(', ')}</p>
+                            {r.ingredients.length > 0 && missing.length > 0 && (
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive">
+                                  <AlertCircle className="h-3 w-3" /> {missing.length} missing
+                                </span>
+                                <button
+                                  onClick={() => addMissingToShoppingList(r)}
+                                  className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                                >
+                                  <ShoppingCart className="h-3 w-3" /> Add to list
+                                </button>
+                              </div>
+                            )}
+                            {r.ingredients.length > 0 && missing.length === 0 && (
+                              <span className="inline-flex text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 mt-1.5">
+                                ✓ All stocked
+                              </span>
+                            )}
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeRecipe(r.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
             <div className="border-t pt-4">
