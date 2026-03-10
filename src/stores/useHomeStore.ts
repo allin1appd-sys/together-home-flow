@@ -81,6 +81,10 @@ interface HomeStore {
   addRecipe: (recipe: Recipe) => void;
   removeRecipe: (id: string) => void;
   toggleReminder: (id: string) => void;
+  addReminder: (reminder: Reminder) => void;
+  updateReminder: (reminder: Reminder) => void;
+  deleteReminder: (id: string) => void;
+  snoozeReminder: (id: string, until: string) => void;
   setUserName: (name: string) => void;
   suggestToShoppingList: (groceryId: string) => void;
   removeShoppingItem: (id: string) => void;
