@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
