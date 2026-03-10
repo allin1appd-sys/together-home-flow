@@ -74,7 +74,10 @@ interface HomeStore {
   clearCompletedShopping: () => void;
   addMealPlan: (plan: MealPlan) => void;
   removeMealPlan: (id: string) => void;
+  updateMealPlan: (id: string, updates: Partial<MealPlan>) => void;
+  copyLastWeekMeals: (currentWeekStart: string) => void;
   addRecipe: (recipe: Recipe) => void;
+  removeRecipe: (id: string) => void;
   toggleReminder: (id: string) => void;
   setUserName: (name: string) => void;
   suggestToShoppingList: (groceryId: string) => void;
