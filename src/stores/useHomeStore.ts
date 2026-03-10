@@ -82,6 +82,9 @@ interface HomeStore {
   setUserName: (name: string) => void;
   suggestToShoppingList: (groceryId: string) => void;
   removeShoppingItem: (id: string) => void;
+  addTrip: (trip: Trip) => void;
+  updateTrip: (trip: Trip) => void;
+  deleteTrip: (id: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>((set) => ({
