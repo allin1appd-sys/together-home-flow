@@ -159,4 +159,7 @@ export const useHomeStore = create<HomeStore>((set) => ({
     return { shoppingList: [newItem, ...s.shoppingList] };
   }),
   removeShoppingItem: (id) => set((s) => ({ shoppingList: s.shoppingList.filter((i) => i.id !== id) })),
+  addTrip: (trip) => set((s) => ({ trips: [trip, ...s.trips] })),
+  updateTrip: (trip) => set((s) => ({ trips: s.trips.map((t) => t.id === trip.id ? trip : t) })),
+  deleteTrip: (id) => set((s) => ({ trips: s.trips.filter((t) => t.id !== id) })),
 }));
