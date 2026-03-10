@@ -1,15 +1,145 @@
 import { useHomeStore } from '@/stores/useHomeStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plane, MapPin, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Plane, MapPin, Calendar, Plus, Trash2 } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { useState } from 'react';
+import { Trip } from '@/types';
 
-const Trips = () => {
-  const { trips } = useHomeStore();
+const TRIP_CATEGORIES = ['weekend getaway', 'vacation', 'business', 'road trip', 'adventure', 'other'];
+
+const statusColor: Record<string, string> = {
+  upcoming: 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
+  active: 'bg-green-500/15 text-green-700 dark:text-green-300 border-green-500/30',
+  completed: 'bg-muted text-muted-foreground border-border',
+};
+
+interface SwipeableTripCardProps {
+  trip: Trip;
+  onTap: () => void;
+  onDelete: () => void;
+}
+
+const SwipeableTripCard = ({ trip, onTap, onDelete }: SwipeableTripCardProps) => {
+  const x = useMotionValue(0);
+  const trashOpacity = useTransform(x, [-100, -50], [1, 0]);
+  const daysUntil = differenceInDays(parseISO(trip.startDate), new Date());
 
   return (
-    <div className="px-4 pt-6 space-y-4">
+    <div className="relative overflow-hidden rounded-xl">
+      <motion.div
+        className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 rounded-xl"
+        style={{ opacity: trashOpacity }}
+      >
+        <Trash2 className="h-5 w-5 text-destructive-foreground" />
+      </motion.div>
+      <motion.div
+        style={{ x }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.3}
+        onDragEnd={(_, info) => {
+          if (info.offset.x < -100) {
+            animate(x, -400, { duration: 0.2 });
+            setTimeout(onDelete, 200);
+          } else {
+            animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 });
+          }
+        }}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      >
+        <Card className="overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" onClick={onTap}>
+          <div className="h-20 bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
+            <Plane className="h-7 w-7 text-primary" />
+          </div>
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="min-w-0 flex-1">
+                <h3 className="font-semibold truncate">{trip.title}</h3>
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{trip.destination}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                  <Calendar className="h-3 w-3 shrink-0" />
+                  {format(parseISO(trip.startDate), 'MMM d')} — {format(parseISO(trip.endDate), 'MMM d')}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1.5 ml-2">
+                <Badge className={statusColor[trip.status]} variant="outline">
+                  {trip.status}
+                </Badge>
+                <span className="text-xs font-medium text-muted-foreground">
+                  {daysUntil <= 0 ? 'Now!' : `${daysUntil}d away`}
+                </span>
+              </div>
+            </div>
+            {trip.description && (
+              <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{trip.description}</p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+};
+
+const emptyTrip = (): Omit<Trip, 'id'> => ({
+  title: '',
+  destination: '',
+  startDate: format(new Date(), 'yyyy-MM-dd'),
+  endDate: format(new Date(), 'yyyy-MM-dd'),
+  description: '',
+  category: 'vacation',
+  status: 'upcoming',
+});
+
+const Trips = () => {
+  const { trips, addTrip, updateTrip, deleteTrip } = useHomeStore();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
+  const [form, setForm] = useState<Omit<Trip, 'id'>>(emptyTrip());
+
+  const openAdd = () => {
+    setEditingTrip(null);
+    setForm(emptyTrip());
+    setSheetOpen(true);
+  };
+
+  const openEdit = (trip: Trip) => {
+    setEditingTrip(trip);
+    setForm({ title: trip.title, destination: trip.destination, startDate: trip.startDate, endDate: trip.endDate, description: trip.description || '', category: trip.category, status: trip.status });
+    setSheetOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!form.title.trim() || !form.destination.trim()) return;
+    if (editingTrip) {
+      updateTrip({ ...editingTrip, ...form });
+    } else {
+      addTrip({ id: `trip-${Date.now()}`, ...form });
+    }
+    setSheetOpen(false);
+  };
+
+  const handleDelete = () => {
+    if (editingTrip) {
+      deleteTrip(editingTrip.id);
+      setSheetOpen(false);
+    }
+  };
+
+  return (
+    <div className="px-4 pt-6 pb-24 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Trips</h1>
       </div>
@@ -18,45 +148,103 @@ const Trips = () => {
         <div className="text-center py-16">
           <Plane className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">No trips planned yet</p>
-          <p className="text-xs text-muted-foreground mt-1">Trip planning coming in a future update!</p>
+          <p className="text-xs text-muted-foreground mt-1">Tap + to plan your first trip!</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {trips.map((trip) => {
-            const daysUntil = differenceInDays(parseISO(trip.startDate), new Date());
-            return (
-              <motion.div key={trip.id} initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                <Card className="overflow-hidden">
-                  <div className="h-24 bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
-                    <Plane className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold">{trip.title}</h3>
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {trip.destination}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                          <Calendar className="h-3 w-3" />
-                          {format(parseISO(trip.startDate), 'MMM d')} — {format(parseISO(trip.endDate), 'MMM d')}
-                        </div>
-                      </div>
-                      <Badge variant="secondary">
-                        {daysUntil <= 0 ? 'Now!' : `${daysUntil}d`}
-                      </Badge>
-                    </div>
-                    {trip.description && (
-                      <p className="text-xs text-muted-foreground mt-2 font-serif-content">{trip.description}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+          {trips.map((trip) => (
+            <SwipeableTripCard
+              key={trip.id}
+              trip={trip}
+              onTap={() => openEdit(trip)}
+              onDelete={() => deleteTrip(trip.id)}
+            />
+          ))}
         </div>
       )}
+
+      {/* FAB */}
+      <motion.button
+        className="fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+        whileTap={{ scale: 0.9 }}
+        onClick={openAdd}
+      >
+        <Plus className="h-6 w-6" />
+      </motion.button>
+
+      {/* Add / Edit Sheet */}
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{editingTrip ? 'Edit Trip' : 'New Trip'}</SheetTitle>
+            <SheetDescription>{editingTrip ? 'Update trip details' : 'Plan a new adventure'}</SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-4 mt-4">
+            <div className="space-y-1.5">
+              <Label>Title</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Beach Getaway" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Destination</Label>
+              <Input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} placeholder="Santa Monica" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Start Date</Label>
+                <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>End Date</Label>
+                <Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TRIP_CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Trip['status'] })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Notes about the trip..." rows={3} />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button className="flex-1" onClick={handleSave} disabled={!form.title.trim() || !form.destination.trim()}>
+                {editingTrip ? 'Update' : 'Add Trip'}
+              </Button>
+              {editingTrip && (
+                <Button variant="destructive" size="icon" onClick={handleDelete}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
