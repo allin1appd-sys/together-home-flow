@@ -2,7 +2,7 @@ import { format, differenceInDays, isToday, isTomorrow, parseISO } from 'date-fn
 import { useHomeStore } from '@/stores/useHomeStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTriangle } from 'lucide-react';
+import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTriangle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
