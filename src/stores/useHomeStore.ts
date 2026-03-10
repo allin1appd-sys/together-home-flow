@@ -117,4 +117,19 @@ export const useHomeStore = create<HomeStore>((set) => ({
     reminders: s.reminders.map((r) => r.id === id ? { ...r, isChecked: !r.isChecked } : r),
   })),
   setUserName: (name) => set({ userName: name }),
+  suggestToShoppingList: (groceryId) => set((s) => {
+    const grocery = s.groceries.find((g) => g.id === groceryId);
+    if (!grocery) return s;
+    const alreadyExists = s.shoppingList.some((i) => i.name.toLowerCase() === grocery.name.toLowerCase());
+    if (alreadyExists) return s;
+    const newItem: ShoppingListItem = {
+      id: `sl-${Date.now()}`,
+      name: grocery.name,
+      quantity: grocery.quantity,
+      category: grocery.category,
+      isPurchased: false,
+    };
+    return { shoppingList: [newItem, ...s.shoppingList] };
+  }),
+  removeShoppingItem: (id) => set((s) => ({ shoppingList: s.shoppingList.filter((i) => i.id !== id) })),
 }));
