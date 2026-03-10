@@ -253,7 +253,7 @@ const Meals = () => {
             </SheetTitle>
           </SheetHeader>
           <div className="space-y-4 pt-4 pb-6">
-            <Input placeholder="Meal name" value={mealName} onChange={(e) => setMealName(e.target.value)} autoFocus />
+            <Input placeholder="Meal name" value={mealName} onChange={(e) => setMealName(e.target.value)} />
             {recipes.length > 0 && (
               <div>
                 <p className="text-xs text-muted-foreground mb-1.5">Or pick from recipes:</p>

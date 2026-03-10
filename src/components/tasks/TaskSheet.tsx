@@ -99,7 +99,7 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
           <SheetTitle>{editingTask ? 'Edit Task' : 'New Task'}</SheetTitle>
         </SheetHeader>
         <div className="space-y-4 pt-4 pb-6">
-          <Input placeholder="Task title" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
+          <Input placeholder="Task title" value={title} onChange={(e) => setTitle(e.target.value)} />
           <Textarea
             placeholder="Description (optional)"
             value={description}

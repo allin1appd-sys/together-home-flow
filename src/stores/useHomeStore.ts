@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
@@ -93,7 +94,7 @@ interface HomeStore {
   deleteTrip: (id: string) => void;
 }
 
-export const useHomeStore = create<HomeStore>((set) => ({
+export const useHomeStore = create<HomeStore>()(persist((set) => ({
   tasks: mockTasks,
   groceries: mockGroceries,
   shoppingList: mockShoppingList,
@@ -174,4 +175,4 @@ export const useHomeStore = create<HomeStore>((set) => ({
   addTrip: (trip) => set((s) => ({ trips: [trip, ...s.trips] })),
   updateTrip: (trip) => set((s) => ({ trips: s.trips.map((t) => t.id === trip.id ? trip : t) })),
   deleteTrip: (id) => set((s) => ({ trips: s.trips.filter((t) => t.id !== id) })),
-}));
+}), { name: 'homehub-store' }));
