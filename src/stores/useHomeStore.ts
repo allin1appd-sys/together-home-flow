@@ -115,7 +115,28 @@ export const useHomeStore = create<HomeStore>((set) => ({
   clearCompletedShopping: () => set((s) => ({ shoppingList: s.shoppingList.filter((i) => !i.isPurchased) })),
   addMealPlan: (plan) => set((s) => ({ mealPlans: [...s.mealPlans, plan] })),
   removeMealPlan: (id) => set((s) => ({ mealPlans: s.mealPlans.filter((m) => m.id !== id) })),
+  updateMealPlan: (id, updates) => set((s) => ({
+    mealPlans: s.mealPlans.map((m) => m.id === id ? { ...m, ...updates } : m),
+  })),
+  copyLastWeekMeals: (currentWeekStart) => set((s) => {
+    const start = new Date(currentWeekStart + 'T12:00');
+    const prevStart = subDays(start, 7);
+    const lastWeekMeals = s.mealPlans.filter((m) => {
+      const d = new Date(m.date + 'T12:00');
+      return d >= prevStart && d < start;
+    });
+    const newMeals: MealPlan[] = [];
+    lastWeekMeals.forEach((m) => {
+      const newDate = format(addDays(new Date(m.date + 'T12:00'), 7), 'yyyy-MM-dd');
+      const exists = s.mealPlans.some((e) => e.date === newDate && e.mealType === m.mealType);
+      if (!exists) {
+        newMeals.push({ ...m, id: `mp-${Date.now()}-${Math.random()}`, date: newDate });
+      }
+    });
+    return { mealPlans: [...s.mealPlans, ...newMeals] };
+  }),
   addRecipe: (recipe) => set((s) => ({ recipes: [...s.recipes, recipe] })),
+  removeRecipe: (id) => set((s) => ({ recipes: s.recipes.filter((r) => r.id !== id) })),
   toggleReminder: (id) => set((s) => ({
     reminders: s.reminders.map((r) => r.id === id ? { ...r, isChecked: !r.isChecked } : r),
   })),
