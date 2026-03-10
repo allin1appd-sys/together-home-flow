@@ -43,9 +43,11 @@ const mockMealPlans: MealPlan[] = [
 ];
 
 const mockReminders: Reminder[] = [
-  { id: 'rem1', title: 'Renew car insurance', dueDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), isChecked: false, category: 'Bills & Payments' },
-  { id: 'rem2', title: 'Schedule dentist appointment', dueDate: tomorrow, isChecked: false, category: 'Health & Medical' },
-  { id: 'rem3', title: 'Pay electricity bill', dueDate: today, isChecked: false, category: 'Bills & Payments' },
+  { id: 'rem1', title: 'Renew car insurance', dueDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), isChecked: false, category: 'Bills & Payments', leadDays: 3, repeat: 'yearly', createdAt: yesterday },
+  { id: 'rem2', title: 'Schedule dentist appointment', dueDate: tomorrow, isChecked: false, category: 'Health & Medical', leadDays: 3, repeat: 'none', createdAt: yesterday },
+  { id: 'rem3', title: 'Pay electricity bill', dueDate: today, isChecked: false, category: 'Bills & Payments', leadDays: 1, repeat: 'monthly', createdAt: yesterday },
+  { id: 'rem4', title: 'Replace HVAC filter', dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'), isChecked: false, category: 'Home Maintenance', leadDays: 7, repeat: 'none', createdAt: yesterday },
+  { id: 'rem5', title: 'Netflix subscription renewal', dueDate: format(addDays(new Date(), 3), 'yyyy-MM-dd'), isChecked: false, category: 'Subscriptions', leadDays: 1, repeat: 'monthly', createdAt: yesterday },
 ];
 
 const mockTrips: Trip[] = [
