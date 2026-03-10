@@ -3,8 +3,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AppShell } from "@/components/layout/AppShell";
+import Index from "./pages/Index";
+import Tasks from "./pages/Tasks";
+import Groceries from "./pages/Groceries";
+import Meals from "./pages/Meals";
+import Trips from "./pages/Trips";
+import ShoppingList from "./pages/ShoppingList";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +20,17 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/groceries" element={<Groceries />} />
+            <Route path="/meals" element={<Meals />} />
+            <Route path="/trips" element={<Trips />} />
+            <Route path="/shopping" element={<ShoppingList />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppShell>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
