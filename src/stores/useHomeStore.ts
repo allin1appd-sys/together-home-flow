@@ -43,9 +43,11 @@ const mockMealPlans: MealPlan[] = [
 ];
 
 const mockReminders: Reminder[] = [
-  { id: 'rem1', title: 'Renew car insurance', dueDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), isChecked: false, category: 'Bills & Payments' },
-  { id: 'rem2', title: 'Schedule dentist appointment', dueDate: tomorrow, isChecked: false, category: 'Health & Medical' },
-  { id: 'rem3', title: 'Pay electricity bill', dueDate: today, isChecked: false, category: 'Bills & Payments' },
+  { id: 'rem1', title: 'Renew car insurance', dueDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), isChecked: false, category: 'Bills & Payments', leadDays: 3, repeat: 'yearly', createdAt: yesterday },
+  { id: 'rem2', title: 'Schedule dentist appointment', dueDate: tomorrow, isChecked: false, category: 'Health & Medical', leadDays: 3, repeat: 'none', createdAt: yesterday },
+  { id: 'rem3', title: 'Pay electricity bill', dueDate: today, isChecked: false, category: 'Bills & Payments', leadDays: 1, repeat: 'monthly', createdAt: yesterday },
+  { id: 'rem4', title: 'Replace HVAC filter', dueDate: format(addDays(new Date(), 10), 'yyyy-MM-dd'), isChecked: false, category: 'Home Maintenance', leadDays: 7, repeat: 'none', createdAt: yesterday },
+  { id: 'rem5', title: 'Netflix subscription renewal', dueDate: format(addDays(new Date(), 3), 'yyyy-MM-dd'), isChecked: false, category: 'Subscriptions', leadDays: 1, repeat: 'monthly', createdAt: yesterday },
 ];
 
 const mockTrips: Trip[] = [
@@ -79,6 +81,10 @@ interface HomeStore {
   addRecipe: (recipe: Recipe) => void;
   removeRecipe: (id: string) => void;
   toggleReminder: (id: string) => void;
+  addReminder: (reminder: Reminder) => void;
+  updateReminder: (reminder: Reminder) => void;
+  deleteReminder: (id: string) => void;
+  snoozeReminder: (id: string, until: string) => void;
   setUserName: (name: string) => void;
   suggestToShoppingList: (groceryId: string) => void;
   removeShoppingItem: (id: string) => void;
@@ -142,6 +148,12 @@ export const useHomeStore = create<HomeStore>((set) => ({
   removeRecipe: (id) => set((s) => ({ recipes: s.recipes.filter((r) => r.id !== id) })),
   toggleReminder: (id) => set((s) => ({
     reminders: s.reminders.map((r) => r.id === id ? { ...r, isChecked: !r.isChecked } : r),
+  })),
+  addReminder: (reminder) => set((s) => ({ reminders: [reminder, ...s.reminders] })),
+  updateReminder: (reminder) => set((s) => ({ reminders: s.reminders.map((r) => r.id === reminder.id ? reminder : r) })),
+  deleteReminder: (id) => set((s) => ({ reminders: s.reminders.filter((r) => r.id !== id) })),
+  snoozeReminder: (id, until) => set((s) => ({
+    reminders: s.reminders.map((r) => r.id === id ? { ...r, snoozedUntil: until } : r),
   })),
   setUserName: (name) => set({ userName: name }),
   suggestToShoppingList: (groceryId) => set((s) => {

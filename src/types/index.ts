@@ -75,12 +75,20 @@ export interface RecipeIngredient {
   unit?: string;
 }
 
+export type ReminderRepeat = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type ReminderCategory = 'Bills & Payments' | 'Health & Medical' | 'Home Maintenance' | 'Subscriptions' | 'Documents & Renewals' | 'Custom';
+
 export interface Reminder {
   id: string;
   title: string;
+  description?: string;
   dueDate: string;
   isChecked: boolean;
-  category: string;
+  category: ReminderCategory;
+  leadDays: number;
+  repeat: ReminderRepeat;
+  snoozedUntil?: string;
+  createdAt: string;
 }
 
 export interface Trip {
