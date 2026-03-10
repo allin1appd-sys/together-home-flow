@@ -6,6 +6,47 @@ import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTri
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
+
+const speedDialItems = [
+  { icon: Bell, label: 'Reminder', path: '/reminders' },
+  { icon: ShoppingCart, label: 'Grocery', path: '/groceries' },
+  { icon: CheckSquare, label: 'Task', path: '/tasks' },
+];
+
+function SpeedDial({ navigate }: { navigate: (path: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="fixed bottom-24 right-4 flex flex-col items-end gap-2 z-40">
+      <AnimatePresence>
+        {open && speedDialItems.map((item, i) => (
+          <motion.button
+            key={item.label}
+            initial={{ opacity: 0, scale: 0.3, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0, transition: { delay: i * 0.05 } }}
+            exit={{ opacity: 0, scale: 0.3, y: 10 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { navigate(item.path); setOpen(false); }}
+            className="flex items-center gap-2"
+          >
+            <span className="text-xs font-medium bg-card text-card-foreground px-2 py-1 rounded-lg shadow-sm">{item.label}</span>
+            <div className="h-10 w-10 rounded-full bg-secondary text-secondary-foreground shadow-md flex items-center justify-center">
+              <item.icon className="h-4 w-4" />
+            </div>
+          </motion.button>
+        ))}
+      </AnimatePresence>
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        animate={{ rotate: open ? 45 : 0 }}
+        onClick={() => setOpen(!open)}
+        className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+      >
+        <Plus className="h-6 w-6" />
+      </motion.button>
+    </div>
+  );
+}
 
 const settle = {
   initial: { scale: 0.95, opacity: 0 },
