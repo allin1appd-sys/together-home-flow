@@ -77,6 +77,8 @@ interface HomeStore {
   addRecipe: (recipe: Recipe) => void;
   toggleReminder: (id: string) => void;
   setUserName: (name: string) => void;
+  suggestToShoppingList: (groceryId: string) => void;
+  removeShoppingItem: (id: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>((set) => ({
