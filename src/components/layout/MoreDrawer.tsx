@@ -8,7 +8,7 @@ const items = [
   { path: '/maintenance', label: 'Maintenance', icon: Wrench, disabled: true },
   { path: '/notes', label: 'Notes', icon: StickyNote, disabled: true },
   { path: '/budget', label: 'Budget', icon: Wallet, disabled: true },
-  { path: '/settings', label: 'Settings', icon: Settings, disabled: true },
+  { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
 interface Props {

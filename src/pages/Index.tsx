@@ -170,16 +170,8 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {/* FABs */}
-      <div className="fixed bottom-24 right-4 flex flex-col gap-3 z-40">
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => navigate('/tasks')}
-          className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
-        >
-          <Plus className="h-5 w-5" />
-        </motion.button>
-      </div>
+      {/* Speed Dial FAB */}
+      <SpeedDial navigate={navigate} />
     </div>
   );
 };

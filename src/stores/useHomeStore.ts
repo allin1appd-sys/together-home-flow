@@ -114,4 +114,5 @@ export const useHomeStore = create<HomeStore>((set) => ({
   toggleReminder: (id) => set((s) => ({
     reminders: s.reminders.map((r) => r.id === id ? { ...r, isChecked: !r.isChecked } : r),
   })),
+  setUserName: (name) => set({ userName: name }),
 }));
