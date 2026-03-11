@@ -112,3 +112,15 @@ export interface MaintenanceTask {
   notes?: string;
   createdAt: string;
 }
+
+export type NoteColor = 'yellow' | 'blue' | 'green' | 'pink' | 'purple' | 'orange';
+
+export interface Note {
+  id: string;
+  title: string;
+  body?: string;
+  color: NoteColor;
+  isPinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
