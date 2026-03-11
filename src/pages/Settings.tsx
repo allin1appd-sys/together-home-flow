@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useFamilyMembers } from '@/hooks/data/useFamilyMembers';
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Sun, Moon, Monitor, Plus, X, LogOut } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Sun, Moon, Monitor, Plus, X, LogOut, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,6 +27,7 @@ const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { familyMembers, addFamilyMember, removeFamilyMember } = useFamilyMembers();
+  const { preferences, updatePreference } = useNotificationPreferences();
   const [newMemberName, setNewMemberName] = useState('');
   const navigate = useNavigate();
 
@@ -74,6 +77,28 @@ const Settings = () => {
           <div className="flex gap-2">
             <Input placeholder="Add family member" value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddMember()} className="flex-1 h-9 text-sm" />
             <Button size="sm" variant="outline" onClick={handleAddMember} className="h-9 px-3"><Plus className="h-4 w-4" /></Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Bell className="h-4 w-4" /> Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">Reminders</Label>
+            <Switch checked={preferences.remindersEnabled} onCheckedChange={(v) => updatePreference({ remindersEnabled: v })} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">Tasks</Label>
+            <Switch checked={preferences.tasksEnabled} onCheckedChange={(v) => updatePreference({ tasksEnabled: v })} />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm">Groceries</Label>
+            <Switch checked={preferences.groceriesEnabled} onCheckedChange={(v) => updatePreference({ groceriesEnabled: v })} />
           </div>
         </CardContent>
       </Card>
