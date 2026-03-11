@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useHomeStore } from '@/stores/useHomeStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sun, Moon, Monitor, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const themes = [
@@ -12,12 +14,36 @@ const themes = [
   { value: 'system', label: 'System', icon: Monitor },
 ] as const;
 
+const MEMBER_COLORS = [
+  'hsl(220, 70%, 55%)',
+  'hsl(340, 70%, 55%)',
+  'hsl(150, 60%, 45%)',
+  'hsl(30, 80%, 55%)',
+  'hsl(280, 60%, 55%)',
+  'hsl(190, 70%, 45%)',
+  'hsl(45, 80%, 50%)',
+  'hsl(0, 65%, 55%)',
+];
+
 const Settings = () => {
   const { theme, setTheme } = useTheme();
-  const { userName, setUserName } = useHomeStore();
+  const { userName, setUserName, familyMembers, addFamilyMember, removeFamilyMember } = useHomeStore();
+  const [newMemberName, setNewMemberName] = useState('');
+
+  const handleAddMember = () => {
+    if (!newMemberName.trim()) return;
+    const usedColors = familyMembers.map((m) => m.color);
+    const nextColor = MEMBER_COLORS.find((c) => !usedColors.includes(c)) || MEMBER_COLORS[familyMembers.length % MEMBER_COLORS.length];
+    addFamilyMember({
+      id: `fm-${Date.now()}`,
+      name: newMemberName.trim(),
+      color: nextColor,
+    });
+    setNewMemberName('');
+  };
 
   return (
-    <div className="px-4 pt-6 space-y-5">
+    <div className="px-4 pt-6 space-y-5 pb-24">
       <h1 className="text-2xl font-bold">Settings</h1>
 
       <Card>
@@ -33,6 +59,43 @@ const Settings = () => {
               onChange={(e) => setUserName(e.target.value)}
               placeholder="Enter your name"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Family Members</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          {familyMembers.map((member) => (
+            <div key={member.id} className="flex items-center gap-3">
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                style={{ backgroundColor: member.color }}
+              >
+                {member.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm font-medium flex-1">{member.name}</span>
+              <button
+                onClick={() => removeFamilyMember(member.id)}
+                className="p-1 text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add family member"
+              value={newMemberName}
+              onChange={(e) => setNewMemberName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
+              className="flex-1 h-9 text-sm"
+            />
+            <Button size="sm" variant="outline" onClick={handleAddMember} className="h-9 px-3">
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         </CardContent>
       </Card>

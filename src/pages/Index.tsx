@@ -253,6 +253,9 @@ const Dashboard = () => {
 
       {/* Speed Dial FAB */}
       <SpeedDial navigate={navigate} />
+
+      {/* Onboarding */}
+      <OnboardingSheet />
     </div>
   );
 };

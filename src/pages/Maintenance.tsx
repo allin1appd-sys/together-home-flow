@@ -228,7 +228,15 @@ const Maintenance = () => {
             </div>
             <div>
               <Label>Assigned to (optional)</Label>
-              <Input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Name" />
+              <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Assign to..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Unassigned</SelectItem>
+                  {familyMembers.map((m) => (
+                    <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Notes (optional)</Label>
