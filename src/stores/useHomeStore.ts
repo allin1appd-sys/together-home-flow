@@ -212,4 +212,10 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
       return { ...t, lastCompleted: todayStr, nextDue: format(addDays(new Date(), t.frequencyDays), 'yyyy-MM-dd') };
     }),
   })),
+  addNote: (note) => set((s) => ({ notes: [note, ...s.notes] })),
+  updateNote: (note) => set((s) => ({ notes: s.notes.map((n) => n.id === note.id ? note : n) })),
+  deleteNote: (id) => set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+  toggleNotePin: (id) => set((s) => ({
+    notes: s.notes.map((n) => n.id === id ? { ...n, isPinned: !n.isPinned, updatedAt: new Date().toISOString() } : n),
+  })),
 }), { name: 'homehub-store' }));

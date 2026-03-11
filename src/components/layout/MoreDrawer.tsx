@@ -6,7 +6,7 @@ const items = [
   { path: '/shopping', label: 'Shopping List', icon: ShoppingBag },
   { path: '/reminders', label: 'Reminders', icon: Bell },
   { path: '/maintenance', label: 'Maintenance', icon: Wrench },
-  { path: '/notes', label: 'Notes', icon: StickyNote, disabled: true },
+  { path: '/notes', label: 'Notes', icon: StickyNote },
   { path: '/budget', label: 'Budget', icon: Wallet, disabled: true },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
