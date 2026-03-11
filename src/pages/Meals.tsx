@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X, ChevronLeft, ChevronRight, BookOpen, Copy, Trash2, ShoppingCart, AlertCircle } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, BookOpen, Copy, Trash2, ShoppingCart, AlertCircle } from 'lucide-react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { MealPlan, MealType, Recipe } from '@/types';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { toast } from 'sonner';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 const mealEmoji: Record<MealType, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍿' };
@@ -19,10 +20,7 @@ const mealEmoji: Record<MealType, string> = { breakfast: '🌅', lunch: '☀️'
 const SWIPE_THRESHOLD = -80;
 
 const SwipeableMealCell = ({
-  meal,
-  type,
-  onTap,
-  onDelete,
+  meal, type, onTap, onDelete,
 }: {
   meal: MealPlan | undefined;
   type: MealType;
@@ -34,10 +32,7 @@ const SwipeableMealCell = ({
 
   if (!meal) {
     return (
-      <button
-        onClick={onTap}
-        className="text-left rounded-lg p-2 text-xs transition-colors bg-muted/50 hover:bg-muted"
-      >
+      <button onClick={onTap} className="text-left rounded-lg p-2 text-xs transition-colors bg-muted/50 hover:bg-muted">
         <span className="text-muted-foreground">{mealEmoji[type]} {type}</span>
         <p className="text-muted-foreground mt-0.5">+ Add</p>
       </button>
@@ -46,10 +41,7 @@ const SwipeableMealCell = ({
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <motion.div
-        className="absolute inset-0 flex items-center justify-end pr-3 bg-destructive"
-        style={{ opacity: bgOpacity }}
-      >
+      <motion.div className="absolute inset-0 flex items-center justify-end pr-3 bg-destructive" style={{ opacity: bgOpacity }}>
         <Trash2 className="h-4 w-4 text-destructive-foreground" />
       </motion.div>
       <motion.button
@@ -59,9 +51,7 @@ const SwipeableMealCell = ({
         dragConstraints={{ left: -120, right: 0 }}
         dragElastic={0.1}
         onDragEnd={(_: any, info: PanInfo) => {
-          if (info.offset.x < SWIPE_THRESHOLD) {
-            onDelete();
-          }
+          if (info.offset.x < SWIPE_THRESHOLD) onDelete();
         }}
         onClick={onTap}
       >
@@ -82,6 +72,8 @@ const Meals = () => {
   const [mealName, setMealName] = useState('');
   const [selectedRecipeId, setSelectedRecipeId] = useState('');
   const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteRecipeId, setDeleteRecipeId] = useState<string | null>(null);
 
   // Recipe form
   const [rName, setRName] = useState('');
@@ -117,10 +109,7 @@ const Meals = () => {
     const name = mealName.trim() || recipe?.name || '';
 
     if (editingMealId) {
-      updateMealPlan(editingMealId, {
-        recipeId: selectedRecipeId || undefined,
-        customMealName: name,
-      });
+      updateMealPlan(editingMealId, { recipeId: selectedRecipeId || undefined, customMealName: name });
     } else {
       addMealPlan({
         id: Date.now().toString(),
@@ -135,8 +124,7 @@ const Meals = () => {
 
   const handleDeleteFromSheet = () => {
     if (editingMealId) {
-      removeMealPlan(editingMealId);
-      setMealSheet(false);
+      setDeleteId(editingMealId);
     }
   };
 
@@ -233,7 +221,7 @@ const Meals = () => {
                         meal={meal}
                         type={type}
                         onTap={() => meal ? openMealSheet(dateStr, type, meal) : openMealSheet(dateStr, type)}
-                        onDelete={() => meal && removeMealPlan(meal.id)}
+                        onDelete={() => meal && setDeleteId(meal.id)}
                       />
                     );
                   })}
@@ -314,7 +302,7 @@ const Meals = () => {
                               </span>
                             )}
                           </div>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeRecipe(r.id)}>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteRecipeId(r.id)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -337,6 +325,22 @@ const Meals = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete meal?"
+        description="This meal will be removed from your plan."
+        onConfirm={() => { if (deleteId) { removeMealPlan(deleteId); setMealSheet(false); } setDeleteId(null); }}
+      />
+
+      <ConfirmDialog
+        open={!!deleteRecipeId}
+        onOpenChange={(open) => !open && setDeleteRecipeId(null)}
+        title="Delete recipe?"
+        description="This recipe will be permanently removed from your library."
+        onConfirm={() => { if (deleteRecipeId) removeRecipe(deleteRecipeId); setDeleteRecipeId(null); }}
+      />
     </div>
   );
 };

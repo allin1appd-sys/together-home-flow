@@ -125,6 +125,7 @@ interface HomeStore {
   setUserName: (name: string) => void;
   suggestToShoppingList: (groceryId: string) => void;
   removeShoppingItem: (id: string) => void;
+  updateShoppingItem: (id: string, updates: Partial<ShoppingListItem>) => void;
   addTrip: (trip: Trip) => void;
   updateTrip: (trip: Trip) => void;
   deleteTrip: (id: string) => void;

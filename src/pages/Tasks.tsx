@@ -9,6 +9,7 @@ import { Task, Priority, TaskCategory } from '@/types';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskSheet from '@/components/tasks/TaskSheet';
 import CompletionHistory from '@/components/tasks/CompletionHistory';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const categories: TaskCategory[] = ['cleaning', 'errands', 'repairs', 'kids', 'pets', 'cooking', 'shopping', 'other'];
 const priorities: Priority[] = ['low', 'medium', 'high', 'urgent'];
@@ -21,6 +22,7 @@ const Tasks = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const activeTasks = tasks.filter((t) => !t.isCompleted);
   const completedTasks = tasks.filter((t) => t.isCompleted);
@@ -100,7 +102,7 @@ const Tasks = () => {
                     <TaskCard
                       task={task}
                       onToggle={toggleTask}
-                      onDelete={deleteTask}
+                      onDelete={(id) => setDeleteId(id)}
                       onEdit={handleEdit}
                       onToggleSubTask={toggleSubTask}
                     />
@@ -126,6 +128,14 @@ const Tasks = () => {
         editingTask={editingTask}
         onAdd={addTask}
         onUpdate={updateTask}
+      />
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete task?"
+        description="This task will be permanently removed."
+        onConfirm={() => { if (deleteId) deleteTask(deleteId); setDeleteId(null); }}
       />
     </div>
   );

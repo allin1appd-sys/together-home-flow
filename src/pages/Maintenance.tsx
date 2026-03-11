@@ -13,6 +13,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-mo
 import { cn } from '@/lib/utils';
 import { MaintenanceTask } from '@/types';
 import { differenceInDays, parseISO, format } from 'date-fns';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const spring = { type: 'spring' as const, stiffness: 300, damping: 25 };
 
@@ -32,10 +33,7 @@ const statusConfig: Record<TaskStatus, { label: string; className: string }> = {
 };
 
 function MaintenanceCard({
-  task,
-  onComplete,
-  onDelete,
-  onEdit,
+  task, onComplete, onDelete, onEdit,
 }: {
   task: MaintenanceTask;
   onComplete: (id: string) => void;
@@ -57,15 +55,11 @@ function MaintenanceCard({
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <motion.div
-        className="absolute inset-0 bg-green-500 flex items-center justify-end pr-6 rounded-lg"
-        style={{ opacity: bgOpacity }}
-      >
+      <motion.div className="absolute inset-0 bg-green-500 flex items-center justify-end pr-6 rounded-lg" style={{ opacity: bgOpacity }}>
         <motion.div style={{ scale: checkScale }}>
           <Check className="h-6 w-6 text-white" />
         </motion.div>
       </motion.div>
-
       <motion.div
         drag="x"
         dragConstraints={{ left: -150, right: 0 }}
@@ -86,15 +80,12 @@ function MaintenanceCard({
                   <Badge className={cn('text-[10px] px-1.5 py-0 shrink-0', className)}>{label}</Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Every {task.frequencyDays} days
-                  {task.assignedTo && ` · ${task.assignedTo}`}
+                  Every {task.frequencyDays} days{task.assignedTo && ` · ${task.assignedTo}`}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {daysUntil < 0
                     ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) > 1 ? 's' : ''} overdue`
-                    : daysUntil === 0
-                    ? 'Due today'
-                    : `Due in ${daysUntil} day${daysUntil > 1 ? 's' : ''}`}
+                    : daysUntil === 0 ? 'Due today' : `Due in ${daysUntil} day${daysUntil > 1 ? 's' : ''}`}
                   {task.lastCompleted && ` · Last done ${task.lastCompleted}`}
                 </p>
               </div>
@@ -116,6 +107,7 @@ const Maintenance = () => {
   const { maintenanceTasks, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask, familyMembers } = useHomeStore();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<MaintenanceTask | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
   const [frequencyDays, setFrequencyDays] = useState('30');
@@ -200,7 +192,7 @@ const Maintenance = () => {
                 <MaintenanceCard
                   task={task}
                   onComplete={completeMaintenanceTask}
-                  onDelete={deleteMaintenanceTask}
+                  onDelete={(id) => setDeleteId(id)}
                   onEdit={openEdit}
                 />
               </motion.div>
@@ -247,6 +239,14 @@ const Maintenance = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete maintenance task?"
+        description="This task will be permanently removed."
+        onConfirm={() => { if (deleteId) deleteMaintenanceTask(deleteId); setDeleteId(null); }}
+      />
     </div>
   );
 };

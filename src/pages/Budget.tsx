@@ -14,6 +14,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { Transaction, BudgetCategory } from '@/types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const BUDGET_CATEGORIES: BudgetCategory[] = ['housing', 'food', 'transport', 'utilities', 'entertainment', 'health', 'shopping', 'education', 'savings', 'other'];
 
@@ -83,6 +84,7 @@ const SwipeableTransaction = ({ transaction, onDelete }: SwipeableTransactionPro
 const Budget = () => {
   const { transactions, budgetLimits, addTransaction, deleteTransaction } = useHomeStore();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({
     description: '',
     amount: '',
@@ -129,7 +131,6 @@ const Budget = () => {
     <div className="px-4 pt-6 pb-24 space-y-4">
       <h1 className="text-2xl font-bold">Budget</h1>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-3 gap-2">
         <Card>
           <CardContent className="p-3 text-center">
@@ -171,7 +172,7 @@ const Budget = () => {
             monthlyTransactions
               .sort((a, b) => b.date.localeCompare(a.date))
               .map((t) => (
-                <SwipeableTransaction key={t.id} transaction={t} onDelete={() => deleteTransaction(t.id)} />
+                <SwipeableTransaction key={t.id} transaction={t} onDelete={() => setDeleteId(t.id)} />
               ))
           )}
         </TabsContent>
@@ -212,7 +213,6 @@ const Budget = () => {
         </TabsContent>
       </Tabs>
 
-      {/* FAB */}
       <motion.button
         className="fixed bottom-24 right-5 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
         whileTap={{ scale: 0.9 }}
@@ -221,7 +221,6 @@ const Budget = () => {
         <Plus className="h-6 w-6" />
       </motion.button>
 
-      {/* Add Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
           <SheetHeader>
@@ -256,6 +255,14 @@ const Budget = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete transaction?"
+        description="This transaction will be permanently removed."
+        onConfirm={() => { if (deleteId) deleteTransaction(deleteId); setDeleteId(null); }}
+      />
     </div>
   );
 };

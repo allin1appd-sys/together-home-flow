@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useHomeStore } from '@/stores/useHomeStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +10,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plane, MapPin, Calendar, Plus, Trash2, PackageCheck, Clock } from 'lucide-react';
+import { Plane, MapPin, Calendar, Plus, Trash2, Clock } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import { useState } from 'react';
-import { Trip, TripActivity, PackingItem } from '@/types';
+import { Trip } from '@/types';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const TRIP_CATEGORIES = ['weekend getaway', 'vacation', 'business', 'road trip', 'adventure', 'other'];
 
@@ -113,6 +114,7 @@ const Trips = () => {
   const [form, setForm] = useState<Omit<Trip, 'id'>>(emptyTrip());
   const [newActivity, setNewActivity] = useState({ time: '', description: '' });
   const [newPackingItem, setNewPackingItem] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const openAdd = () => {
     setEditingTrip(null);
@@ -142,8 +144,7 @@ const Trips = () => {
 
   const handleDelete = () => {
     if (editingTrip) {
-      deleteTrip(editingTrip.id);
-      setSheetOpen(false);
+      setDeleteId(editingTrip.id);
     }
   };
 
@@ -196,7 +197,7 @@ const Trips = () => {
       ) : (
         <div className="space-y-3">
           {trips.map((trip) => (
-            <SwipeableTripCard key={trip.id} trip={trip} onTap={() => openEdit(trip)} onDelete={() => deleteTrip(trip.id)} />
+            <SwipeableTripCard key={trip.id} trip={trip} onTap={() => openEdit(trip)} onDelete={() => setDeleteId(trip.id)} />
           ))}
         </div>
       )}
@@ -330,6 +331,14 @@ const Trips = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete trip?"
+        description="This trip and all its details will be permanently removed."
+        onConfirm={() => { if (deleteId) { deleteTrip(deleteId); setSheetOpen(false); } setDeleteId(null); }}
+      />
     </div>
   );
 };
