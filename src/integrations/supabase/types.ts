@@ -308,6 +308,33 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          groceries_enabled: boolean
+          id: string
+          reminders_enabled: boolean
+          tasks_enabled: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          groceries_enabled?: boolean
+          id?: string
+          reminders_enabled?: boolean
+          tasks_enabled?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          groceries_enabled?: boolean
+          id?: string
+          reminders_enabled?: boolean
+          tasks_enabled?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string
@@ -328,6 +355,30 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
           user_id?: string
         }
         Relationships: []
