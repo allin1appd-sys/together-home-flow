@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip } from '@/types';
+import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
 const today = format(new Date(), 'yyyy-MM-dd');
@@ -55,6 +55,13 @@ const mockTrips: Trip[] = [
   { id: 'trip1', title: 'Beach Weekend', destination: 'Santa Monica', startDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'), description: 'Relaxing weekend at the beach', category: 'weekend getaway', status: 'upcoming' },
 ];
 
+const mockMaintenanceTasks: MaintenanceTask[] = [
+  { id: 'mt1', title: 'Replace HVAC filter', frequencyDays: 90, lastCompleted: format(subDays(new Date(), 95), 'yyyy-MM-dd'), nextDue: format(subDays(new Date(), 5), 'yyyy-MM-dd'), assignedTo: 'Alex', createdAt: yesterday },
+  { id: 'mt2', title: 'Pest control spray', frequencyDays: 180, lastCompleted: format(subDays(new Date(), 160), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 20), 'yyyy-MM-dd'), createdAt: yesterday },
+  { id: 'mt3', title: 'Deep clean kitchen', frequencyDays: 30, lastCompleted: format(subDays(new Date(), 28), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 2), 'yyyy-MM-dd'), assignedTo: 'Jordan', createdAt: yesterday },
+  { id: 'mt4', title: 'Clean gutters', frequencyDays: 180, lastCompleted: format(subDays(new Date(), 50), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 130), 'yyyy-MM-dd'), createdAt: yesterday },
+];
+
 interface HomeStore {
   tasks: Task[];
   groceries: GroceryItem[];
@@ -63,6 +70,7 @@ interface HomeStore {
   recipes: Recipe[];
   reminders: Reminder[];
   trips: Trip[];
+  maintenanceTasks: MaintenanceTask[];
   userName: string;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
@@ -92,6 +100,10 @@ interface HomeStore {
   addTrip: (trip: Trip) => void;
   updateTrip: (trip: Trip) => void;
   deleteTrip: (id: string) => void;
+  addMaintenanceTask: (task: MaintenanceTask) => void;
+  updateMaintenanceTask: (task: MaintenanceTask) => void;
+  deleteMaintenanceTask: (id: string) => void;
+  completeMaintenanceTask: (id: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
@@ -102,6 +114,7 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   recipes: mockRecipes,
   reminders: mockReminders,
   trips: mockTrips,
+  maintenanceTasks: mockMaintenanceTasks,
   userName: 'Alex',
 
   addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
@@ -175,4 +188,14 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   addTrip: (trip) => set((s) => ({ trips: [trip, ...s.trips] })),
   updateTrip: (trip) => set((s) => ({ trips: s.trips.map((t) => t.id === trip.id ? trip : t) })),
   deleteTrip: (id) => set((s) => ({ trips: s.trips.filter((t) => t.id !== id) })),
+  addMaintenanceTask: (task) => set((s) => ({ maintenanceTasks: [task, ...s.maintenanceTasks] })),
+  updateMaintenanceTask: (task) => set((s) => ({ maintenanceTasks: s.maintenanceTasks.map((t) => t.id === task.id ? task : t) })),
+  deleteMaintenanceTask: (id) => set((s) => ({ maintenanceTasks: s.maintenanceTasks.filter((t) => t.id !== id) })),
+  completeMaintenanceTask: (id) => set((s) => ({
+    maintenanceTasks: s.maintenanceTasks.map((t) => {
+      if (t.id !== id) return t;
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      return { ...t, lastCompleted: todayStr, nextDue: format(addDays(new Date(), t.frequencyDays), 'yyyy-MM-dd') };
+    }),
+  })),
 }), { name: 'homehub-store' }));
