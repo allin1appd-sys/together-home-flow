@@ -14,6 +14,7 @@ import ShoppingList from "./pages/ShoppingList";
 import Settings from "./pages/Settings";
 import Reminders from "./pages/Reminders";
 import Maintenance from "./pages/Maintenance";
+import Notes from "./pages/Notes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
