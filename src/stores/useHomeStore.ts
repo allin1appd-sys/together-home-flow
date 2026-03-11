@@ -139,6 +139,9 @@ interface HomeStore {
   addTransaction: (transaction: Transaction) => void;
   deleteTransaction: (id: string) => void;
   updateBudgetLimit: (category: string, limit: number) => void;
+  addFamilyMember: (member: FamilyMember) => void;
+  removeFamilyMember: (id: string) => void;
+  setOnboardingComplete: (val: boolean) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
