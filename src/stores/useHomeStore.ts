@@ -113,6 +113,10 @@ interface HomeStore {
   updateMaintenanceTask: (task: MaintenanceTask) => void;
   deleteMaintenanceTask: (id: string) => void;
   completeMaintenanceTask: (id: string) => void;
+  addNote: (note: Note) => void;
+  updateNote: (note: Note) => void;
+  deleteNote: (id: string) => void;
+  toggleNotePin: (id: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
