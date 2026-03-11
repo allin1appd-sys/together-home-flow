@@ -157,6 +157,11 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   transactions: mockTransactions,
   budgetLimits: mockBudgetLimits,
   userName: 'Alex',
+  familyMembers: [
+    { id: 'fm1', name: 'Alex', color: 'hsl(220, 70%, 55%)' },
+    { id: 'fm2', name: 'Jordan', color: 'hsl(340, 70%, 55%)' },
+  ],
+  onboardingComplete: false,
 
   addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
   toggleTask: (id) => set((s) => ({
