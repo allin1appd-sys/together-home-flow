@@ -54,7 +54,7 @@ const settle = {
 };
 
 const Dashboard = () => {
-  const { userName, tasks, mealPlans, reminders, groceries, trips } = useHomeStore();
+  const { userName, tasks, mealPlans, reminders, groceries, trips, transactions } = useHomeStore();
   const navigate = useNavigate();
   const now = new Date();
 
