@@ -3,6 +3,7 @@ import { useMealPlans } from '@/hooks/data/useMealPlans';
 import { useRecipes } from '@/hooks/data/useRecipes';
 import { useGroceries } from '@/hooks/data/useGroceries';
 import { useShoppingList } from '@/hooks/data/useShoppingList';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,7 @@ import { format, addDays, startOfWeek } from 'date-fns';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 
 const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 const mealEmoji: Record<MealType, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍿' };
@@ -38,6 +40,7 @@ const SwipeableMealCell = ({ meal, type, onTap, onDelete }: { meal: MealPlan | u
 };
 
 const Meals = () => {
+  const { householdId } = useAuth();
   const { mealPlans, isLoading: mpLoading, addMealPlan, removeMealPlan, updateMealPlan, copyLastWeekMeals } = useMealPlans();
   const { recipes, addRecipe, removeRecipe } = useRecipes();
   const { groceries } = useGroceries();
@@ -105,101 +108,103 @@ const Meals = () => {
   if (mpLoading) return <div className="px-4 pt-6 space-y-4"><Skeleton className="h-8 w-32" /><div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-32 w-full" />)}</div></div>;
 
   return (
-    <div className="px-4 pt-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Meal Plan</h1>
-        <Button size="sm" variant="outline" onClick={() => setRecipeSheet(true)} className="gap-1"><BookOpen className="h-4 w-4" /> Recipes</Button>
-      </div>
-      <div className="flex items-center justify-between">
-        <Button size="icon" variant="ghost" onClick={() => setWeekOffset(weekOffset - 1)}><ChevronLeft className="h-4 w-4" /></Button>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{format(days[0], 'MMM d')} — {format(days[6], 'MMM d')}</span>
-          <Button size="sm" variant="ghost" onClick={handleCopyLastWeek} className="gap-1 text-xs h-7 px-2"><Copy className="h-3 w-3" /> Copy last week</Button>
+    <PullToRefresh queryKeys={[['meal_plans', householdId!], ['recipes', householdId!]]}>
+      <div className="px-4 pt-6 space-y-4 pb-24">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Meal Plan</h1>
+          <Button size="sm" variant="outline" onClick={() => setRecipeSheet(true)} className="gap-1"><BookOpen className="h-4 w-4" /> Recipes</Button>
         </div>
-        <Button size="icon" variant="ghost" onClick={() => setWeekOffset(weekOffset + 1)}><ChevronRight className="h-4 w-4" /></Button>
-      </div>
-      <div className="space-y-3">
-        {days.map((day) => {
-          const dateStr = format(day, 'yyyy-MM-dd');
-          const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
-          return (
-            <Card key={dateStr} className={cn(isToday && 'ring-2 ring-primary/30')}>
-              <CardContent className="p-3">
-                <p className={cn('text-xs font-semibold mb-2', isToday ? 'text-primary' : 'text-muted-foreground')}>{format(day, 'EEE, MMM d')} {isToday && '· Today'}</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {mealTypes.map((type) => { const meal = getMeal(dateStr, type); return <SwipeableMealCell key={type} meal={meal} type={type} onTap={() => meal ? openMealSheet(dateStr, type, meal) : openMealSheet(dateStr, type)} onDelete={() => meal && setDeleteId(meal.id)} />; })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      <Sheet open={mealSheet} onOpenChange={setMealSheet}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader><SheetTitle>{editingMealId ? 'Edit' : 'Add'} {selectedMealType} — {selectedDate && format(new Date(selectedDate + 'T12:00'), 'EEE, MMM d')}</SheetTitle></SheetHeader>
-          <div className="space-y-4 pt-4 pb-6">
-            <Input placeholder="Meal name" value={mealName} onChange={(e) => setMealName(e.target.value)} />
-            {recipes.length > 0 && (
-              <div><p className="text-xs text-muted-foreground mb-1.5">Or pick from recipes:</p>
-                <Select value={selectedRecipeId} onValueChange={(v) => { setSelectedRecipeId(v); setMealName(''); }}>
-                  <SelectTrigger><SelectValue placeholder="Choose recipe" /></SelectTrigger>
-                  <SelectContent>{recipes.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            )}
-            <Button className="w-full" onClick={handleSaveMeal}>{editingMealId ? 'Save Changes' : 'Add Meal'}</Button>
-            {editingMealId && <Button variant="destructive" className="w-full" onClick={() => setDeleteId(editingMealId)}><Trash2 className="h-4 w-4 mr-1" /> Delete Meal</Button>}
+        <div className="flex items-center justify-between">
+          <Button size="icon" variant="ghost" onClick={() => setWeekOffset(weekOffset - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{format(days[0], 'MMM d')} — {format(days[6], 'MMM d')}</span>
+            <Button size="sm" variant="ghost" onClick={handleCopyLastWeek} className="gap-1 text-xs h-7 px-2"><Copy className="h-3 w-3" /> Copy last week</Button>
           </div>
-        </SheetContent>
-      </Sheet>
+          <Button size="icon" variant="ghost" onClick={() => setWeekOffset(weekOffset + 1)}><ChevronRight className="h-4 w-4" /></Button>
+        </div>
+        <div className="space-y-3">
+          {days.map((day) => {
+            const dateStr = format(day, 'yyyy-MM-dd');
+            const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+            return (
+              <Card key={dateStr} className={cn(isToday && 'ring-2 ring-primary/30')}>
+                <CardContent className="p-3">
+                  <p className={cn('text-xs font-semibold mb-2', isToday ? 'text-primary' : 'text-muted-foreground')}>{format(day, 'EEE, MMM d')} {isToday && '· Today'}</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {mealTypes.map((type) => { const meal = getMeal(dateStr, type); return <SwipeableMealCell key={type} meal={meal} type={type} onTap={() => meal ? openMealSheet(dateStr, type, meal) : openMealSheet(dateStr, type)} onDelete={() => meal && setDeleteId(meal.id)} />; })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
 
-      <Sheet open={recipeSheet} onOpenChange={setRecipeSheet}>
-        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-          <SheetHeader><SheetTitle>Recipe Library</SheetTitle></SheetHeader>
-          <div className="space-y-4 pt-4 pb-6">
-            {recipes.length > 0 && (
-              <div className="space-y-2">
-                {recipes.map((r) => {
-                  const missing = getMissingIngredients(r);
-                  return (
-                    <Card key={r.id}><CardContent className="p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{r.name}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{r.prepTime} min · {r.tags.join(', ')}</p>
-                          {r.ingredients.length > 0 && missing.length > 0 && (
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive"><AlertCircle className="h-3 w-3" /> {missing.length} missing</span>
-                              <button onClick={() => addMissingToShoppingList(r)} className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"><ShoppingCart className="h-3 w-3" /> Add to list</button>
-                            </div>
-                          )}
-                          {r.ingredients.length > 0 && missing.length === 0 && <span className="inline-flex text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 mt-1.5">✓ All stocked</span>}
+        <Sheet open={mealSheet} onOpenChange={setMealSheet}>
+          <SheetContent side="bottom" className="rounded-t-2xl">
+            <SheetHeader><SheetTitle>{editingMealId ? 'Edit' : 'Add'} {selectedMealType} — {selectedDate && format(new Date(selectedDate + 'T12:00'), 'EEE, MMM d')}</SheetTitle></SheetHeader>
+            <div className="space-y-4 pt-4 pb-6">
+              <Input placeholder="Meal name" value={mealName} onChange={(e) => setMealName(e.target.value)} />
+              {recipes.length > 0 && (
+                <div><p className="text-xs text-muted-foreground mb-1.5">Or pick from recipes:</p>
+                  <Select value={selectedRecipeId} onValueChange={(v) => { setSelectedRecipeId(v); setMealName(''); }}>
+                    <SelectTrigger><SelectValue placeholder="Choose recipe" /></SelectTrigger>
+                    <SelectContent>{recipes.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              )}
+              <Button className="w-full" onClick={handleSaveMeal}>{editingMealId ? 'Save Changes' : 'Add Meal'}</Button>
+              {editingMealId && <Button variant="destructive" className="w-full" onClick={() => setDeleteId(editingMealId)}><Trash2 className="h-4 w-4 mr-1" /> Delete Meal</Button>}
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <Sheet open={recipeSheet} onOpenChange={setRecipeSheet}>
+          <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+            <SheetHeader><SheetTitle>Recipe Library</SheetTitle></SheetHeader>
+            <div className="space-y-4 pt-4 pb-6">
+              {recipes.length > 0 && (
+                <div className="space-y-2">
+                  {recipes.map((r) => {
+                    const missing = getMissingIngredients(r);
+                    return (
+                      <Card key={r.id}><CardContent className="p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{r.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{r.prepTime} min · {r.tags.join(', ')}</p>
+                            {r.ingredients.length > 0 && missing.length > 0 && (
+                              <div className="flex items-center gap-1.5 mt-1.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive"><AlertCircle className="h-3 w-3" /> {missing.length} missing</span>
+                                <button onClick={() => addMissingToShoppingList(r)} className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"><ShoppingCart className="h-3 w-3" /> Add to list</button>
+                              </div>
+                            )}
+                            {r.ingredients.length > 0 && missing.length === 0 && <span className="inline-flex text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 mt-1.5">✓ All stocked</span>}
+                          </div>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteRecipeId(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => setDeleteRecipeId(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                      </div>
-                    </CardContent></Card>
-                  );
-                })}
-              </div>
-            )}
-            <div className="border-t pt-4">
-              <p className="text-sm font-semibold mb-3">Add New Recipe</p>
-              <div className="space-y-3">
-                <Input placeholder="Recipe name" value={rName} onChange={(e) => setRName(e.target.value)} />
-                <Textarea placeholder="Instructions" value={rInstructions} onChange={(e) => setRInstructions(e.target.value)} rows={3} />
-                <Input placeholder="Prep time (minutes)" type="number" value={rPrepTime} onChange={(e) => setRPrepTime(e.target.value)} />
-                <Input placeholder="Tags (comma-separated)" value={rTags} onChange={(e) => setRTags(e.target.value)} />
-                <Button className="w-full" onClick={handleAddRecipe}>Save Recipe</Button>
+                      </CardContent></Card>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold mb-3">Add New Recipe</p>
+                <div className="space-y-3">
+                  <Input placeholder="Recipe name" value={rName} onChange={(e) => setRName(e.target.value)} />
+                  <Textarea placeholder="Instructions" value={rInstructions} onChange={(e) => setRInstructions(e.target.value)} rows={3} />
+                  <Input placeholder="Prep time (minutes)" type="number" value={rPrepTime} onChange={(e) => setRPrepTime(e.target.value)} />
+                  <Input placeholder="Tags (comma-separated)" value={rTags} onChange={(e) => setRTags(e.target.value)} />
+                  <Button className="w-full" onClick={handleAddRecipe}>Save Recipe</Button>
+                </div>
               </div>
             </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
 
-      <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title="Delete meal?" description="This meal will be removed from your plan." onConfirm={() => { if (deleteId) { removeMealPlan(deleteId); setMealSheet(false); } setDeleteId(null); }} />
-      <ConfirmDialog open={!!deleteRecipeId} onOpenChange={(open) => !open && setDeleteRecipeId(null)} title="Delete recipe?" description="This recipe will be permanently removed from your library." onConfirm={() => { if (deleteRecipeId) removeRecipe(deleteRecipeId); setDeleteRecipeId(null); }} />
-    </div>
+        <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title="Delete meal?" description="This meal will be removed from your plan." onConfirm={() => { if (deleteId) { removeMealPlan(deleteId); setMealSheet(false); } setDeleteId(null); }} />
+        <ConfirmDialog open={!!deleteRecipeId} onOpenChange={(open) => !open && setDeleteRecipeId(null)} title="Delete recipe?" description="This recipe will be permanently removed from your library." onConfirm={() => { if (deleteRecipeId) removeRecipe(deleteRecipeId); setDeleteRecipeId(null); }} />
+      </div>
+    </PullToRefresh>
   );
 };
 
