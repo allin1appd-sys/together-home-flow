@@ -101,3 +101,14 @@ export interface Trip {
   category: string;
   status: 'upcoming' | 'active' | 'completed';
 }
+
+export interface MaintenanceTask {
+  id: string;
+  title: string;
+  frequencyDays: number;
+  lastCompleted?: string;
+  nextDue: string;
+  assignedTo?: string;
+  notes?: string;
+  createdAt: string;
+}
