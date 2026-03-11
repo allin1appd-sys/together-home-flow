@@ -91,6 +91,20 @@ export interface Reminder {
   createdAt: string;
 }
 
+// Trip types
+export interface TripActivity {
+  id: string;
+  day: number;
+  time: string;
+  description: string;
+}
+
+export interface PackingItem {
+  id: string;
+  name: string;
+  isPacked: boolean;
+}
+
 export interface Trip {
   id: string;
   title: string;
@@ -100,6 +114,8 @@ export interface Trip {
   description?: string;
   category: string;
   status: 'upcoming' | 'active' | 'completed';
+  itinerary: TripActivity[];
+  packingList: PackingItem[];
 }
 
 export interface MaintenanceTask {
@@ -123,4 +139,21 @@ export interface Note {
   isPinned: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+// Budget types
+export type BudgetCategory = 'housing' | 'food' | 'transport' | 'utilities' | 'entertainment' | 'health' | 'shopping' | 'education' | 'savings' | 'other';
+
+export interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  category: BudgetCategory;
+  date: string;
+  type: 'income' | 'expense';
+}
+
+export interface BudgetLimit {
+  category: BudgetCategory;
+  limit: number;
 }

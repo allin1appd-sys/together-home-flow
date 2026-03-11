@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import Reminders from "./pages/Reminders";
 import Maintenance from "./pages/Maintenance";
 import Notes from "./pages/Notes";
+import Budget from "./pages/Budget";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/reminders" element={<Reminders />} />
               <Route path="/maintenance" element={<Maintenance />} />
               <Route path="/notes" element={<Notes />} />
+              <Route path="/budget" element={<Budget />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -7,7 +7,7 @@ const items = [
   { path: '/reminders', label: 'Reminders', icon: Bell },
   { path: '/maintenance', label: 'Maintenance', icon: Wrench },
   { path: '/notes', label: 'Notes', icon: StickyNote },
-  { path: '/budget', label: 'Budget', icon: Wallet, disabled: true },
+  { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -29,12 +29,11 @@ export function MoreDrawer({ open, onOpenChange }: Props) {
           {items.map((item) => (
             <button
               key={item.path}
-              disabled={item.disabled}
               onClick={() => {
                 navigate(item.path);
                 onOpenChange(false);
               }}
-              className="flex flex-col items-center gap-2 rounded-xl bg-muted p-4 text-sm transition-colors hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex flex-col items-center gap-2 rounded-xl bg-muted p-4 text-sm transition-colors hover:bg-accent"
             >
               <item.icon className="h-6 w-6 text-primary" />
               <span className="font-medium text-foreground">{item.label}</span>
