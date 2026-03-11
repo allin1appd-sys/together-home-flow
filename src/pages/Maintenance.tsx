@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMaintenanceTasks } from '@/hooks/data/useMaintenanceTasks';
 import { useFamilyMembers } from '@/hooks/data/useFamilyMembers';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,10 @@ import { MaintenanceTask } from '@/types';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import PullToRefresh from '@/components/shared/PullToRefresh';
+import EmptyState from '@/components/shared/EmptyState';
+import { maintenanceSchema } from '@/lib/validations';
+import { toast } from 'sonner';
 
 const spring = { type: 'spring' as const, stiffness: 300, damping: 25 };
 type TaskStatus = 'overdue' | 'due-soon' | 'on-track';
@@ -53,6 +58,7 @@ function MaintenanceCard({ task, onComplete, onDelete, onEdit }: { task: Mainten
 }
 
 const Maintenance = () => {
+  const { householdId } = useAuth();
   const { maintenanceTasks, isLoading, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask } = useMaintenanceTasks();
   const { familyMembers } = useFamilyMembers();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -69,7 +75,12 @@ const Maintenance = () => {
   const openEdit = (task: MaintenanceTask) => { setEditing(task); setTitle(task.title); setFrequencyDays(String(task.frequencyDays)); setAssignedTo(task.assignedTo || ''); setNotes(task.notes || ''); setSheetOpen(true); };
 
   const handleSave = () => {
-    if (!title.trim()) return;
+    const parsed = maintenanceSchema.safeParse({
+      title, frequencyDays: parseInt(frequencyDays) || 0,
+      assignedTo: assignedTo.trim() || undefined, notes: notes.trim() || undefined,
+    });
+    if (!parsed.success) { toast.error(parsed.error.errors[0].message); return; }
+
     const freq = parseInt(frequencyDays) || 30;
     if (editing) { updateMaintenanceTask({ ...editing, title: title.trim(), frequencyDays: freq, assignedTo: assignedTo.trim() || undefined, notes: notes.trim() || undefined }); }
     else { addMaintenanceTask({ id: `mt-${Date.now()}`, title: title.trim(), frequencyDays: freq, nextDue: format(new Date(), 'yyyy-MM-dd'), assignedTo: assignedTo.trim() || undefined, notes: notes.trim() || undefined, createdAt: format(new Date(), 'yyyy-MM-dd') }); }
@@ -79,32 +90,34 @@ const Maintenance = () => {
   if (isLoading) return <div className="px-4 pt-6 space-y-4 pb-24"><Skeleton className="h-8 w-36" /><div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-20 w-full" />)}</div></div>;
 
   return (
-    <div className="px-4 pt-6 space-y-4 pb-24">
-      <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Maintenance</h1><Button size="sm" onClick={openNew} className="gap-1"><Plus className="h-4 w-4" /> Add</Button></div>
-      <AnimatePresence>
-        {sorted.length === 0 ? <div className="text-center py-12"><p className="text-muted-foreground font-serif italic">No maintenance tasks yet 🔧</p></div> : (
-          <div className="space-y-2">{sorted.map(task => <motion.div key={task.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }} transition={spring}><MaintenanceCard task={task} onComplete={completeMaintenanceTask} onDelete={(id) => setDeleteId(id)} onEdit={openEdit} /></motion.div>)}</div>
-        )}
-      </AnimatePresence>
-      <p className="text-xs text-muted-foreground text-center pt-2">← Swipe left to mark done</p>
+    <PullToRefresh queryKeys={[['maintenance_tasks', householdId!]]}>
+      <div className="px-4 pt-6 space-y-4 pb-24">
+        <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Maintenance</h1><Button size="sm" onClick={openNew} className="gap-1"><Plus className="h-4 w-4" /> Add</Button></div>
+        <AnimatePresence>
+          {sorted.length === 0 ? <EmptyState icon={Wrench} title="No maintenance tasks" description="Keep your home in top shape" actionLabel="Add task" onAction={openNew} /> : (
+            <div className="space-y-2">{sorted.map(task => <motion.div key={task.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }} transition={spring}><MaintenanceCard task={task} onComplete={completeMaintenanceTask} onDelete={(id) => setDeleteId(id)} onEdit={openEdit} /></motion.div>)}</div>
+          )}
+        </AnimatePresence>
+        {sorted.length > 0 && <p className="text-xs text-muted-foreground text-center pt-2">← Swipe left to mark done</p>}
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-          <SheetHeader><SheetTitle>{editing ? 'Edit Task' : 'New Maintenance Task'}</SheetTitle></SheetHeader>
-          <div className="space-y-4 pt-4">
-            <div><Label>Task name</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Replace HVAC filter" /></div>
-            <div><Label>Frequency (days)</Label><Input type="number" value={frequencyDays} onChange={(e) => setFrequencyDays(e.target.value)} placeholder="30" /></div>
-            <div><Label>Assigned to (optional)</Label>
-              <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Assign to..." /></SelectTrigger><SelectContent><SelectItem value="_none">Unassigned</SelectItem>{familyMembers.map(m => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}</SelectContent></Select>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+            <SheetHeader><SheetTitle>{editing ? 'Edit Task' : 'New Maintenance Task'}</SheetTitle></SheetHeader>
+            <div className="space-y-4 pt-4">
+              <div><Label>Task name</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Replace HVAC filter" /></div>
+              <div><Label>Frequency (days)</Label><Input type="number" value={frequencyDays} onChange={(e) => setFrequencyDays(e.target.value)} placeholder="30" /></div>
+              <div><Label>Assigned to (optional)</Label>
+                <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Assign to..." /></SelectTrigger><SelectContent><SelectItem value="_none">Unassigned</SelectItem>{familyMembers.map(m => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}</SelectContent></Select>
+              </div>
+              <div><Label>Notes (optional)</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any details…" rows={2} /></div>
+              <Button className="w-full" onClick={handleSave}>{editing ? 'Update' : 'Add Task'}</Button>
             </div>
-            <div><Label>Notes (optional)</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any details…" rows={2} /></div>
-            <Button className="w-full" onClick={handleSave}>{editing ? 'Update' : 'Add Task'}</Button>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </SheetContent>
+        </Sheet>
 
-      <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title="Delete maintenance task?" description="This task will be permanently removed." onConfirm={() => { if (deleteId) deleteMaintenanceTask(deleteId); setDeleteId(null); }} />
-    </div>
+        <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title="Delete maintenance task?" description="This task will be permanently removed." onConfirm={() => { if (deleteId) deleteMaintenanceTask(deleteId); setDeleteId(null); }} />
+      </div>
+    </PullToRefresh>
   );
 };
 
