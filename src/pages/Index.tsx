@@ -219,6 +219,37 @@ const Dashboard = () => {
         </motion.div>
       )}
 
+      {/* Budget Summary */}
+      <motion.div {...settle} transition={{ delay: 0.3 }}>
+        <button onClick={() => navigate('/budget')} className="w-full">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" />
+                This Month's Budget
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Spent</p>
+                  <p className="text-lg font-bold flex items-center gap-1">
+                    <TrendingDown className="h-4 w-4 text-destructive" />
+                    ${monthExpenses.toFixed(0)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Balance</p>
+                  <p className={cn('text-lg font-bold', monthBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-destructive')}>
+                    ${monthBalance.toFixed(0)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </button>
+      </motion.div>
+
       {/* Speed Dial FAB */}
       <SpeedDial navigate={navigate} />
     </div>
