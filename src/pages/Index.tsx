@@ -1,8 +1,8 @@
-import { format, differenceInDays, isToday, isTomorrow, parseISO } from 'date-fns';
+import { format, differenceInDays, isToday, isTomorrow, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { useHomeStore } from '@/stores/useHomeStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTriangle, X } from 'lucide-react';
+import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTriangle, X, DollarSign, TrendingDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
