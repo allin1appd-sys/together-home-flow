@@ -188,4 +188,14 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   addTrip: (trip) => set((s) => ({ trips: [trip, ...s.trips] })),
   updateTrip: (trip) => set((s) => ({ trips: s.trips.map((t) => t.id === trip.id ? trip : t) })),
   deleteTrip: (id) => set((s) => ({ trips: s.trips.filter((t) => t.id !== id) })),
+  addMaintenanceTask: (task) => set((s) => ({ maintenanceTasks: [task, ...s.maintenanceTasks] })),
+  updateMaintenanceTask: (task) => set((s) => ({ maintenanceTasks: s.maintenanceTasks.map((t) => t.id === task.id ? task : t) })),
+  deleteMaintenanceTask: (id) => set((s) => ({ maintenanceTasks: s.maintenanceTasks.filter((t) => t.id !== id) })),
+  completeMaintenanceTask: (id) => set((s) => ({
+    maintenanceTasks: s.maintenanceTasks.map((t) => {
+      if (t.id !== id) return t;
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      return { ...t, lastCompleted: todayStr, nextDue: format(addDays(new Date(), t.frequencyDays), 'yyyy-MM-dd') };
+    }),
+  })),
 }), { name: 'homehub-store' }));
