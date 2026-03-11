@@ -12,6 +12,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import { cn } from '@/lib/utils';
 import { GroceryItem, ShoppingListItem, StorageLocation, ShoppingCategory } from '@/types';
 import { differenceInDays, parseISO } from 'date-fns';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const storageLocations: StorageLocation[] = ['fridge', 'pantry', 'freezer', 'bathroom', 'cleaning'];
 const shoppingCategories: ShoppingCategory[] = ['produce', 'dairy', 'meat', 'bakery', 'frozen', 'beverages', 'snacks', 'cleaning', 'personal-care', 'other'];
@@ -21,29 +22,22 @@ const statusLabel = { fresh: 'Fresh', expiring: 'Expiring soon', expired: 'Expir
 
 const SWIPE_THRESHOLD = -100;
 
-/* ── Swipeable Grocery Card ── */
 const SwipeableGroceryCard = ({ item, onDecrement, onDelete }: { item: GroceryItem; onDecrement: (id: string) => void; onDelete: (id: string) => void }) => {
   const x = useMotionValue(0);
   const bgOpacity = useTransform(x, [-120, -60, 0], [1, 0.6, 0]);
   const trashScale = useTransform(x, [-120, -60, 0], [1.2, 0.8, 0]);
 
   const handleDragEnd = () => {
-    if (x.get() < SWIPE_THRESHOLD) {
-      onDelete(item.id);
-    }
+    if (x.get() < SWIPE_THRESHOLD) onDelete(item.id);
   };
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <motion.div
-        className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 rounded-lg"
-        style={{ opacity: bgOpacity }}
-      >
+      <motion.div className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 rounded-lg" style={{ opacity: bgOpacity }}>
         <motion.div style={{ scale: trashScale }}>
           <Trash2 className="h-6 w-6 text-destructive-foreground" />
         </motion.div>
       </motion.div>
-
       <motion.div
         drag="x"
         dragConstraints={{ left: -150, right: 0 }}
@@ -78,6 +72,8 @@ const Groceries = () => {
   const [grocerySheet, setGrocerySheet] = useState(false);
   const [shoppingSheet, setShoppingSheet] = useState(false);
   const [filterLocation, setFilterLocation] = useState<string>('all');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteType, setDeleteType] = useState<'grocery' | 'shopping'>('grocery');
 
   // Grocery form
   const [gName, setGName] = useState('');
@@ -98,19 +94,16 @@ const Groceries = () => {
   const activeShoppingItems = shoppingList.filter((i) => !i.isPurchased);
   const purchasedItems = shoppingList.filter((i) => i.isPurchased);
 
-  // Auto-suggest: expired/expiring items not already on shopping list
   const suggestable = groceries.filter(
     (g) => (g.status === 'expired' || g.status === 'expiring') && !shoppingList.some((s) => s.name.toLowerCase() === g.name.toLowerCase())
   );
 
-  // Group shopping by category
   const grouped = shoppingCategories.reduce((acc, cat) => {
     const items = activeShoppingItems.filter((i) => i.category === cat);
     if (items.length > 0) acc[cat] = items;
     return acc;
   }, {} as Record<string, ShoppingListItem[]>);
 
-  // Estimated total
   const estimatedTotal = activeShoppingItems.reduce((sum, i) => sum + (i.estimatedPrice || 0), 0);
 
   const handleAddGrocery = () => {
@@ -150,6 +143,11 @@ const Groceries = () => {
     suggestable.forEach((g) => suggestToShoppingList(g.id));
   };
 
+  const handleDeleteGrocery = (id: string) => {
+    setDeleteType('grocery');
+    setDeleteId(id);
+  };
+
   return (
     <div className="px-4 pt-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -163,7 +161,6 @@ const Groceries = () => {
         </TabsList>
 
         <TabsContent value="inventory" className="space-y-3 mt-3">
-          {/* Auto-suggest banner */}
           {suggestable.length > 0 && (
             <Card className="border-warning/50 bg-warning/10">
               <CardContent className="p-3">
@@ -212,7 +209,7 @@ const Groceries = () => {
             <AnimatePresence>
               {filtered.map((item) => (
                 <motion.div key={item.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }}>
-                  <SwipeableGroceryCard item={item} onDecrement={decrementGrocery} onDelete={removeGrocery} />
+                  <SwipeableGroceryCard item={item} onDecrement={decrementGrocery} onDelete={handleDeleteGrocery} />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -220,7 +217,6 @@ const Groceries = () => {
         </TabsContent>
 
         <TabsContent value="shopping" className="space-y-3 mt-3">
-          {/* Estimated total */}
           {estimatedTotal > 0 && (
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="p-3 flex items-center gap-2">
@@ -243,17 +239,12 @@ const Groceries = () => {
             </div>
           </div>
 
-          {/* Horizontal aisle carousels */}
           {Object.entries(grouped).map(([cat, items]) => (
             <div key={cat}>
               <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5 capitalize">{cat.replace('-', ' ')}</p>
               <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide">
                 {items.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => toggleShoppingItem(item.id)}
-                    className="snap-start shrink-0"
-                  >
+                  <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="snap-start shrink-0">
                     <Card className="w-[140px] hover:bg-accent/50 transition-colors">
                       <CardContent className="p-3 space-y-1">
                         <div className="flex items-center gap-2">
@@ -304,7 +295,6 @@ const Groceries = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Add Grocery Sheet */}
       <Sheet open={grocerySheet} onOpenChange={setGrocerySheet}>
         <SheetContent side="bottom" className="rounded-t-2xl">
           <SheetHeader><SheetTitle>Add Grocery Item</SheetTitle></SheetHeader>
@@ -334,7 +324,6 @@ const Groceries = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Add Shopping Sheet */}
       <Sheet open={shoppingSheet} onOpenChange={setShoppingSheet}>
         <SheetContent side="bottom" className="rounded-t-2xl">
           <SheetHeader><SheetTitle>Add Shopping Item</SheetTitle></SheetHeader>
@@ -355,6 +344,14 @@ const Groceries = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete item?"
+        description="This item will be permanently removed."
+        onConfirm={() => { if (deleteId) removeGrocery(deleteId); setDeleteId(null); }}
+      />
     </div>
   );
 };

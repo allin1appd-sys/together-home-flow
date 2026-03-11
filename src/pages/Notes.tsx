@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
 const NOTE_COLORS: { value: NoteColor; bg: string; label: string }[] = [
   { value: 'yellow', bg: 'bg-yellow-100 dark:bg-yellow-900/40', label: 'Yellow' },
@@ -54,10 +55,7 @@ function NoteCard({ note, onEdit, onDelete, onTogglePin }: { note: Note; onEdit:
       >
         <div className="flex items-start justify-between gap-2 mb-1">
           <h3 className="font-semibold text-sm text-foreground line-clamp-2 flex-1">{note.title}</h3>
-          <button
-            onClick={(e) => { e.stopPropagation(); onTogglePin(); }}
-            className="shrink-0 p-1 -m-1"
-          >
+          <button onClick={(e) => { e.stopPropagation(); onTogglePin(); }} className="shrink-0 p-1 -m-1">
             {note.isPinned ? <Pin className="h-4 w-4 text-primary fill-primary" /> : <PinOff className="h-4 w-4 text-muted-foreground" />}
           </button>
         </div>
@@ -76,6 +74,7 @@ export default function Notes() {
   const [body, setBody] = useState('');
   const [color, setColor] = useState<NoteColor>('yellow');
   const [isPinned, setIsPinned] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const sorted = [...notes].sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
@@ -131,7 +130,7 @@ export default function Notes() {
                   key={note.id}
                   note={note}
                   onEdit={() => openEdit(note)}
-                  onDelete={() => deleteNote(note.id)}
+                  onDelete={() => setDeleteId(note.id)}
                   onTogglePin={() => toggleNotePin(note.id)}
                 />
               ))}
@@ -140,7 +139,6 @@ export default function Notes() {
         )}
       </div>
 
-      {/* FAB */}
       <button
         onClick={openNew}
         className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"
@@ -148,7 +146,6 @@ export default function Notes() {
         <Plus className="h-6 w-6" />
       </button>
 
-      {/* Add/Edit Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="bottom" className="rounded-t-2xl pb-8">
           <SheetHeader>
@@ -157,8 +154,6 @@ export default function Notes() {
           <div className="space-y-4 pt-4">
             <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <Textarea placeholder="Body (optional)" value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
-
-            {/* Color picker */}
             <div>
               <Label className="text-xs text-muted-foreground mb-2 block">Color</Label>
               <div className="flex gap-2">
@@ -171,18 +166,24 @@ export default function Notes() {
                 ))}
               </div>
             </div>
-
             <div className="flex items-center justify-between">
               <Label htmlFor="pin-toggle" className="text-sm">Pin to top</Label>
               <Switch id="pin-toggle" checked={isPinned} onCheckedChange={setIsPinned} />
             </div>
-
             <Button className="w-full" onClick={handleSave} disabled={!title.trim()}>
               {editing ? 'Save Changes' : 'Add Note'}
             </Button>
           </div>
         </SheetContent>
       </Sheet>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+        title="Delete note?"
+        description="This note will be permanently removed."
+        onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }}
+      />
     </div>
   );
 }
