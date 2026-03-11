@@ -70,6 +70,7 @@ interface HomeStore {
   recipes: Recipe[];
   reminders: Reminder[];
   trips: Trip[];
+  maintenanceTasks: MaintenanceTask[];
   userName: string;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
@@ -99,6 +100,10 @@ interface HomeStore {
   addTrip: (trip: Trip) => void;
   updateTrip: (trip: Trip) => void;
   deleteTrip: (id: string) => void;
+  addMaintenanceTask: (task: MaintenanceTask) => void;
+  updateMaintenanceTask: (task: MaintenanceTask) => void;
+  deleteMaintenanceTask: (id: string) => void;
+  completeMaintenanceTask: (id: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
