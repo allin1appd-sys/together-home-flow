@@ -3,10 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { BudgetLimit } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): BudgetLimit {
   return { category: r.category, limit: Number(r.limit_amount) };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useBudgetLimits() {
   const { householdId } = useAuth();
@@ -39,6 +44,7 @@ export function useBudgetLimits() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

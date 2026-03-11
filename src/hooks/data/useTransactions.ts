@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Transaction } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): Transaction {
   return {
@@ -10,6 +11,10 @@ function mapRow(r: any): Transaction {
     category: r.category, date: r.date, type: r.type,
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useTransactions() {
   const { householdId } = useAuth();
@@ -40,16 +45,30 @@ export function useTransactions() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
+  });
+
+  const updateTransaction = useMutation({
+    mutationFn: async (t: Transaction) => {
+      await supabase.from('transactions').update({
+        description: t.description, amount: t.amount,
+        category: t.category, date: t.date, type: t.type,
+      }).eq('id', t.id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const deleteTransaction = useMutation({
     mutationFn: async (id: string) => { await supabase.from('transactions').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {
     transactions, isLoading,
     addTransaction: (t: Transaction) => addTransaction.mutate(t),
+    updateTransaction: (t: Transaction) => updateTransaction.mutate(t),
     deleteTransaction: (id: string) => deleteTransaction.mutate(id),
   };
 }

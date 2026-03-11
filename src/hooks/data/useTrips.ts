@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Trip } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any, packingItems: any[]): Trip {
   return {
@@ -15,6 +16,10 @@ function mapRow(r: any, packingItems: any[]): Trip {
     })),
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useTrips() {
   const { householdId } = useAuth();
@@ -56,6 +61,7 @@ export function useTrips() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateTrip = useMutation({
@@ -73,6 +79,7 @@ export function useTrips() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const deleteTrip = useMutation({
@@ -81,6 +88,7 @@ export function useTrips() {
       await supabase.from('trips').delete().eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

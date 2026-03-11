@@ -3,10 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { FamilyMember } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): FamilyMember {
   return { id: r.id, name: r.name, color: r.color };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useFamilyMembers() {
   const { householdId } = useAuth();
@@ -36,11 +41,13 @@ export function useFamilyMembers() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const removeFamilyMember = useMutation({
     mutationFn: async (id: string) => { await supabase.from('family_members').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

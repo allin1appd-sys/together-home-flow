@@ -3,19 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Task, SubTask } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapTask(row: any, subTasks: any[]): Task {
   return {
-    id: row.id,
-    title: row.title,
-    description: row.description || undefined,
+    id: row.id, title: row.title, description: row.description || undefined,
     dueDate: row.due_date ? row.due_date.split('T')[0] : undefined,
-    priority: row.priority,
-    category: row.category,
-    assignedTo: row.assigned_to || undefined,
-    isCompleted: row.is_completed,
-    completedAt: row.completed_at || undefined,
-    isRecurring: row.is_recurring,
+    priority: row.priority, category: row.category,
+    assignedTo: row.assigned_to || undefined, isCompleted: row.is_completed,
+    completedAt: row.completed_at || undefined, isRecurring: row.is_recurring,
     recurrenceRule: row.recurrence_rule || undefined,
     subTasks: subTasks.filter(st => st.task_id === row.id).map(st => ({
       id: st.id, title: st.title, isCompleted: st.is_completed,
@@ -24,14 +20,17 @@ function mapTask(row: any, subTasks: any[]): Task {
   };
 }
 
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
+
 export function useTasks() {
   const { householdId } = useAuth();
   const qc = useQueryClient();
   const key = ['tasks', householdId];
 
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: key,
-    enabled: !!householdId,
+    queryKey: key, enabled: !!householdId,
     queryFn: async () => {
       const [{ data: rows }, { data: subs }] = await Promise.all([
         supabase.from('tasks').select('*').eq('household_id', householdId!).order('created_at', { ascending: false }),
@@ -41,7 +40,6 @@ export function useTasks() {
     },
   });
 
-  // Realtime
   useEffect(() => {
     if (!householdId) return;
     const channel = supabase.channel('tasks-rt')
@@ -67,6 +65,7 @@ export function useTasks() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const toggleTask = useMutation({
@@ -79,6 +78,7 @@ export function useTasks() {
       }).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const deleteTask = useMutation({
@@ -87,6 +87,7 @@ export function useTasks() {
       await supabase.from('tasks').delete().eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateTask = useMutation({
@@ -96,7 +97,6 @@ export function useTasks() {
         category: task.category, due_date: task.dueDate, assigned_to: task.assignedTo,
         is_recurring: task.isRecurring, recurrence_rule: task.recurrenceRule,
       }).eq('id', task.id);
-      // Replace sub_tasks
       await supabase.from('sub_tasks').delete().eq('task_id', task.id);
       if (task.subTasks.length > 0) {
         await supabase.from('sub_tasks').insert(
@@ -105,6 +105,7 @@ export function useTasks() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const toggleSubTask = useMutation({
@@ -115,6 +116,7 @@ export function useTasks() {
       await supabase.from('sub_tasks').update({ is_completed: !st.isCompleted }).eq('id', subTaskId);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {
