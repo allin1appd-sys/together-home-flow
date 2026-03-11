@@ -7,7 +7,7 @@ const items = [
   { path: '/reminders', label: 'Reminders', icon: Bell },
   { path: '/maintenance', label: 'Maintenance', icon: Wrench },
   { path: '/notes', label: 'Notes', icon: StickyNote },
-  { path: '/budget', label: 'Budget', icon: Wallet, disabled: true },
+  { path: '/budget', label: 'Budget', icon: Wallet },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 

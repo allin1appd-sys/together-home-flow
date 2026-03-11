@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask, Note } from '@/types';
+import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask, Note, Transaction, BudgetLimit } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
 const today = format(new Date(), 'yyyy-MM-dd');
@@ -35,7 +35,6 @@ const mockRecipes: Recipe[] = [
   { id: 'r3', name: 'Smoothie Bowl', instructions: 'Blend frozen fruit with yogurt, top with granola.', prepTime: 5, cookTime: 0, servings: 1, tags: ['breakfast', 'healthy'], ingredients: [{ id: 'ri5', name: 'Frozen berries', quantity: '1', unit: 'cup' }, { id: 'ri6', name: 'Yogurt', quantity: '1/2', unit: 'cup' }] },
 ];
 
-const monday = format(addDays(new Date(), -new Date().getDay() + 1), 'yyyy-MM-dd');
 const mockMealPlans: MealPlan[] = [
   { id: 'mp1', date: today, mealType: 'breakfast', customMealName: 'Smoothie Bowl' },
   { id: 'mp2', date: today, mealType: 'lunch', recipeId: 'r1', customMealName: 'Grilled Chicken Salad' },
@@ -52,7 +51,7 @@ const mockReminders: Reminder[] = [
 ];
 
 const mockTrips: Trip[] = [
-  { id: 'trip1', title: 'Beach Weekend', destination: 'Santa Monica', startDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'), description: 'Relaxing weekend at the beach', category: 'weekend getaway', status: 'upcoming' },
+  { id: 'trip1', title: 'Beach Weekend', destination: 'Santa Monica', startDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'), description: 'Relaxing weekend at the beach', category: 'weekend getaway', status: 'upcoming', itinerary: [], packingList: [{ id: 'pk1', name: 'Sunscreen', isPacked: false }, { id: 'pk2', name: 'Swimsuit', isPacked: true }] },
 ];
 
 const mockMaintenanceTasks: MaintenanceTask[] = [
@@ -70,6 +69,22 @@ const mockNotes: Note[] = [
   { id: 'note5', title: 'Return Amazon package', color: 'pink', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
 ];
 
+const mockTransactions: Transaction[] = [
+  { id: 'txn1', description: 'Rent', amount: 1800, category: 'housing', date: format(subDays(new Date(), 2), 'yyyy-MM-dd'), type: 'expense' },
+  { id: 'txn2', description: 'Salary', amount: 4500, category: 'other', date: format(subDays(new Date(), 5), 'yyyy-MM-dd'), type: 'income' },
+  { id: 'txn3', description: 'Groceries', amount: 127.50, category: 'food', date: format(subDays(new Date(), 1), 'yyyy-MM-dd'), type: 'expense' },
+  { id: 'txn4', description: 'Electric bill', amount: 85, category: 'utilities', date: format(subDays(new Date(), 3), 'yyyy-MM-dd'), type: 'expense' },
+  { id: 'txn5', description: 'Movie tickets', amount: 32, category: 'entertainment', date: today, type: 'expense' },
+  { id: 'txn6', description: 'Gas', amount: 55, category: 'transport', date: format(subDays(new Date(), 4), 'yyyy-MM-dd'), type: 'expense' },
+];
+
+const mockBudgetLimits: BudgetLimit[] = [
+  { category: 'food', limit: 500 },
+  { category: 'entertainment', limit: 150 },
+  { category: 'transport', limit: 200 },
+  { category: 'utilities', limit: 200 },
+];
+
 interface HomeStore {
   tasks: Task[];
   groceries: GroceryItem[];
@@ -80,6 +95,8 @@ interface HomeStore {
   trips: Trip[];
   maintenanceTasks: MaintenanceTask[];
   notes: Note[];
+  transactions: Transaction[];
+  budgetLimits: BudgetLimit[];
   userName: string;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
@@ -117,6 +134,9 @@ interface HomeStore {
   updateNote: (note: Note) => void;
   deleteNote: (id: string) => void;
   toggleNotePin: (id: string) => void;
+  addTransaction: (transaction: Transaction) => void;
+  deleteTransaction: (id: string) => void;
+  updateBudgetLimit: (category: string, limit: number) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
@@ -129,6 +149,8 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   trips: mockTrips,
   maintenanceTasks: mockMaintenanceTasks,
   notes: mockNotes,
+  transactions: mockTransactions,
+  budgetLimits: mockBudgetLimits,
   userName: 'Alex',
 
   addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
@@ -218,4 +240,13 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   toggleNotePin: (id) => set((s) => ({
     notes: s.notes.map((n) => n.id === id ? { ...n, isPinned: !n.isPinned, updatedAt: new Date().toISOString() } : n),
   })),
+  addTransaction: (transaction) => set((s) => ({ transactions: [transaction, ...s.transactions] })),
+  deleteTransaction: (id) => set((s) => ({ transactions: s.transactions.filter((t) => t.id !== id) })),
+  updateBudgetLimit: (category, limit) => set((s) => {
+    const existing = s.budgetLimits.find((b) => b.category === category);
+    if (existing) {
+      return { budgetLimits: s.budgetLimits.map((b) => b.category === category ? { ...b, limit } : b) };
+    }
+    return { budgetLimits: [...s.budgetLimits, { category: category as any, limit }] };
+  }),
 }), { name: 'homehub-store' }));
