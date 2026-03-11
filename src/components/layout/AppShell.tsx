@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { BottomTabBar } from './BottomTabBar';
 import { GlobalSearch } from './GlobalSearch';
 import { Search } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
