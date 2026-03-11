@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask } from '@/types';
+import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask, Note } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
 const today = format(new Date(), 'yyyy-MM-dd');
