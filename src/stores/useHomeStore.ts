@@ -79,6 +79,7 @@ interface HomeStore {
   reminders: Reminder[];
   trips: Trip[];
   maintenanceTasks: MaintenanceTask[];
+  notes: Note[];
   userName: string;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
