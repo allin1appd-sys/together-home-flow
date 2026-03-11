@@ -82,8 +82,8 @@ const SwipeableTripCard = ({ trip, onTap, onDelete }: SwipeableTripCardProps) =>
             </div>
             {trip.description && <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{trip.description}</p>}
             <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-              {trip.itinerary.length > 0 && <span>{trip.itinerary.length} activities</span>}
-              {trip.packingList.length > 0 && (
+              {(trip.itinerary?.length ?? 0) > 0 && <span>{trip.itinerary.length} activities</span>}
+              {(trip.packingList?.length ?? 0) > 0 && (
                 <span>{trip.packingList.filter((p) => p.isPacked).length}/{trip.packingList.length} packed</span>
               )}
             </div>
