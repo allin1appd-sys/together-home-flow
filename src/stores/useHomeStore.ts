@@ -55,6 +55,13 @@ const mockTrips: Trip[] = [
   { id: 'trip1', title: 'Beach Weekend', destination: 'Santa Monica', startDate: format(addDays(new Date(), 5), 'yyyy-MM-dd'), endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'), description: 'Relaxing weekend at the beach', category: 'weekend getaway', status: 'upcoming' },
 ];
 
+const mockMaintenanceTasks: MaintenanceTask[] = [
+  { id: 'mt1', title: 'Replace HVAC filter', frequencyDays: 90, lastCompleted: format(subDays(new Date(), 95), 'yyyy-MM-dd'), nextDue: format(subDays(new Date(), 5), 'yyyy-MM-dd'), assignedTo: 'Alex', createdAt: yesterday },
+  { id: 'mt2', title: 'Pest control spray', frequencyDays: 180, lastCompleted: format(subDays(new Date(), 160), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 20), 'yyyy-MM-dd'), createdAt: yesterday },
+  { id: 'mt3', title: 'Deep clean kitchen', frequencyDays: 30, lastCompleted: format(subDays(new Date(), 28), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 2), 'yyyy-MM-dd'), assignedTo: 'Jordan', createdAt: yesterday },
+  { id: 'mt4', title: 'Clean gutters', frequencyDays: 180, lastCompleted: format(subDays(new Date(), 50), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 130), 'yyyy-MM-dd'), createdAt: yesterday },
+];
+
 interface HomeStore {
   tasks: Task[];
   groceries: GroceryItem[];
