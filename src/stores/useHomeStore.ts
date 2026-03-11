@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask } from '@/types';
+import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask, Note } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
 const today = format(new Date(), 'yyyy-MM-dd');
@@ -62,6 +62,14 @@ const mockMaintenanceTasks: MaintenanceTask[] = [
   { id: 'mt4', title: 'Clean gutters', frequencyDays: 180, lastCompleted: format(subDays(new Date(), 50), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 130), 'yyyy-MM-dd'), createdAt: yesterday },
 ];
 
+const mockNotes: Note[] = [
+  { id: 'note1', title: 'WiFi Password', body: 'Network: HomeHub5G\nPassword: sunshine2024!', color: 'blue', isPinned: true, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note2', title: 'Grocery run Saturday', body: 'Don\'t forget the farmers market closes at 1pm', color: 'green', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note3', title: 'Plumber visit', body: 'Tuesday 10am — Mike\'s Plumbing (555-0123)', color: 'orange', isPinned: true, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note4', title: 'Movie night picks', body: '• The Grand Budapest Hotel\n• Spirited Away\n• Knives Out', color: 'purple', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note5', title: 'Return Amazon package', color: 'pink', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
+];
+
 interface HomeStore {
   tasks: Task[];
   groceries: GroceryItem[];
@@ -71,6 +79,7 @@ interface HomeStore {
   reminders: Reminder[];
   trips: Trip[];
   maintenanceTasks: MaintenanceTask[];
+  notes: Note[];
   userName: string;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
@@ -104,6 +113,10 @@ interface HomeStore {
   updateMaintenanceTask: (task: MaintenanceTask) => void;
   deleteMaintenanceTask: (id: string) => void;
   completeMaintenanceTask: (id: string) => void;
+  addNote: (note: Note) => void;
+  updateNote: (note: Note) => void;
+  deleteNote: (id: string) => void;
+  toggleNotePin: (id: string) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
@@ -115,6 +128,7 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   reminders: mockReminders,
   trips: mockTrips,
   maintenanceTasks: mockMaintenanceTasks,
+  notes: mockNotes,
   userName: 'Alex',
 
   addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
@@ -197,5 +211,11 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       return { ...t, lastCompleted: todayStr, nextDue: format(addDays(new Date(), t.frequencyDays), 'yyyy-MM-dd') };
     }),
+  })),
+  addNote: (note) => set((s) => ({ notes: [note, ...s.notes] })),
+  updateNote: (note) => set((s) => ({ notes: s.notes.map((n) => n.id === note.id ? note : n) })),
+  deleteNote: (id) => set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+  toggleNotePin: (id) => set((s) => ({
+    notes: s.notes.map((n) => n.id === id ? { ...n, isPinned: !n.isPinned, updatedAt: new Date().toISOString() } : n),
   })),
 }), { name: 'homehub-store' }));

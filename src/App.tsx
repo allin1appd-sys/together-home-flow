@@ -14,6 +14,7 @@ import ShoppingList from "./pages/ShoppingList";
 import Settings from "./pages/Settings";
 import Reminders from "./pages/Reminders";
 import Maintenance from "./pages/Maintenance";
+import Notes from "./pages/Notes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/shopping" element={<ShoppingList />} />
               <Route path="/reminders" element={<Reminders />} />
               <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/notes" element={<Notes />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
