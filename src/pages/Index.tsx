@@ -1,8 +1,8 @@
-import { format, differenceInDays, isToday, isTomorrow, parseISO } from 'date-fns';
+import { format, differenceInDays, isToday, isTomorrow, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { useHomeStore } from '@/stores/useHomeStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTriangle, X } from 'lucide-react';
+import { CheckSquare, Plus, ShoppingCart, Bell, Plane, UtensilsCrossed, AlertTriangle, X, DollarSign, TrendingDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -54,7 +54,7 @@ const settle = {
 };
 
 const Dashboard = () => {
-  const { userName, tasks, mealPlans, reminders, groceries, trips } = useHomeStore();
+  const { userName, tasks, mealPlans, reminders, groceries, trips, transactions } = useHomeStore();
   const navigate = useNavigate();
   const now = new Date();
 
@@ -80,6 +80,14 @@ const Dashboard = () => {
 
   const nextTrip = trips.find((t) => t.status === 'upcoming');
   const tripCountdown = nextTrip ? differenceInDays(parseISO(nextTrip.startDate), now) : null;
+
+  // Budget summary
+  const monthStart = startOfMonth(now);
+  const monthEnd = endOfMonth(now);
+  const monthlyTxns = transactions.filter((t) => isWithinInterval(parseISO(t.date), { start: monthStart, end: monthEnd }));
+  const monthIncome = monthlyTxns.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const monthExpenses = monthlyTxns.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const monthBalance = monthIncome - monthExpenses;
 
   const priorityColor: Record<string, string> = {
     urgent: 'bg-destructive text-destructive-foreground',
@@ -210,6 +218,37 @@ const Dashboard = () => {
           </Card>
         </motion.div>
       )}
+
+      {/* Budget Summary */}
+      <motion.div {...settle} transition={{ delay: 0.3 }}>
+        <button onClick={() => navigate('/budget')} className="w-full">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" />
+                This Month's Budget
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Spent</p>
+                  <p className="text-lg font-bold flex items-center gap-1">
+                    <TrendingDown className="h-4 w-4 text-destructive" />
+                    ${monthExpenses.toFixed(0)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Balance</p>
+                  <p className={cn('text-lg font-bold', monthBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-destructive')}>
+                    ${monthBalance.toFixed(0)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </button>
+      </motion.div>
 
       {/* Speed Dial FAB */}
       <SpeedDial navigate={navigate} />
