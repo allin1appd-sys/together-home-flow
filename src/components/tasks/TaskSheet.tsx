@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
 import { Task, Priority, TaskCategory, SubTask } from '@/types';
+import { useHomeStore } from '@/stores/useHomeStore';
 import { format } from 'date-fns';
 
 const categories: TaskCategory[] = ['cleaning', 'errands', 'repairs', 'kids', 'pets', 'cooking', 'shopping', 'other'];
@@ -20,11 +21,13 @@ interface TaskSheetProps {
 }
 
 const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskSheetProps) => {
+  const { familyMembers } = useHomeStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [category, setCategory] = useState<TaskCategory>('other');
   const [dueDate, setDueDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [assignedTo, setAssignedTo] = useState('');
   const [subTasks, setSubTasks] = useState<SubTask[]>([]);
   const [newSubTask, setNewSubTask] = useState('');
 
@@ -35,6 +38,7 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
       setPriority(editingTask.priority);
       setCategory(editingTask.category);
       setDueDate(editingTask.dueDate || format(new Date(), 'yyyy-MM-dd'));
+      setAssignedTo(editingTask.assignedTo || '');
       setSubTasks([...editingTask.subTasks]);
     } else {
       resetForm();
@@ -47,6 +51,7 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
     setPriority('medium');
     setCategory('other');
     setDueDate(format(new Date(), 'yyyy-MM-dd'));
+    setAssignedTo('');
     setSubTasks([]);
     setNewSubTask('');
   };
@@ -71,6 +76,7 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
         priority,
         category,
         dueDate,
+        assignedTo: assignedTo || undefined,
         subTasks,
       });
     } else {
@@ -81,6 +87,7 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
         priority,
         category,
         dueDate,
+        assignedTo: assignedTo || undefined,
         isCompleted: false,
         isRecurring: false,
         subTasks,
@@ -124,7 +131,20 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
               </SelectContent>
             </Select>
           </div>
-          <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <div className="flex gap-2">
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="flex-1" />
+            <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Assign to..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Unassigned</SelectItem>
+                {familyMembers.map((m) => (
+                  <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Sub-tasks */}
           <div className="space-y-2">

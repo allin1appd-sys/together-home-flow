@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import OnboardingSheet from '@/components/onboarding/OnboardingSheet';
 
 const speedDialItems = [
   { icon: Bell, label: 'Reminder', path: '/reminders' },
@@ -252,6 +253,9 @@ const Dashboard = () => {
 
       {/* Speed Dial FAB */}
       <SpeedDial navigate={navigate} />
+
+      {/* Onboarding */}
+      <OnboardingSheet />
     </div>
   );
 };

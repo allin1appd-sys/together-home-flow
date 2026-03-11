@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -112,7 +113,7 @@ function MaintenanceCard({
 }
 
 const Maintenance = () => {
-  const { maintenanceTasks, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask } = useHomeStore();
+  const { maintenanceTasks, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask, familyMembers } = useHomeStore();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<MaintenanceTask | null>(null);
 
@@ -228,7 +229,15 @@ const Maintenance = () => {
             </div>
             <div>
               <Label>Assigned to (optional)</Label>
-              <Input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Name" />
+              <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Assign to..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Unassigned</SelectItem>
+                  {familyMembers.map((m) => (
+                    <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Notes (optional)</Label>

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask, Note, Transaction, BudgetLimit } from '@/types';
+import { Task, GroceryItem, ShoppingListItem, MealPlan, Recipe, Reminder, Trip, MaintenanceTask, Note, Transaction, BudgetLimit, FamilyMember } from '@/types';
 import { addDays, format, subDays } from 'date-fns';
 
 const today = format(new Date(), 'yyyy-MM-dd');
@@ -98,6 +98,8 @@ interface HomeStore {
   transactions: Transaction[];
   budgetLimits: BudgetLimit[];
   userName: string;
+  familyMembers: FamilyMember[];
+  onboardingComplete: boolean;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
@@ -137,6 +139,9 @@ interface HomeStore {
   addTransaction: (transaction: Transaction) => void;
   deleteTransaction: (id: string) => void;
   updateBudgetLimit: (category: string, limit: number) => void;
+  addFamilyMember: (member: FamilyMember) => void;
+  removeFamilyMember: (id: string) => void;
+  setOnboardingComplete: (val: boolean) => void;
 }
 
 export const useHomeStore = create<HomeStore>()(persist((set) => ({
@@ -152,6 +157,11 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   transactions: mockTransactions,
   budgetLimits: mockBudgetLimits,
   userName: 'Alex',
+  familyMembers: [
+    { id: 'fm1', name: 'Alex', color: 'hsl(220, 70%, 55%)' },
+    { id: 'fm2', name: 'Jordan', color: 'hsl(340, 70%, 55%)' },
+  ],
+  onboardingComplete: false,
 
   addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
   toggleTask: (id) => set((s) => ({
@@ -249,4 +259,7 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
     }
     return { budgetLimits: [...s.budgetLimits, { category: category as any, limit }] };
   }),
+  addFamilyMember: (member) => set((s) => ({ familyMembers: [...s.familyMembers, member] })),
+  removeFamilyMember: (id) => set((s) => ({ familyMembers: s.familyMembers.filter((m) => m.id !== id) })),
+  setOnboardingComplete: (val) => set({ onboardingComplete: val }),
 }), { name: 'homehub-store' }));

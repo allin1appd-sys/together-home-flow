@@ -1,3 +1,9 @@
+export interface FamilyMember {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type TaskCategory = 'cleaning' | 'errands' | 'repairs' | 'kids' | 'pets' | 'cooking' | 'shopping' | 'other';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
