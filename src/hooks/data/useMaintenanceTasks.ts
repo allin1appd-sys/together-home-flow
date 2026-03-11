@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MaintenanceTask } from '@/types';
 import { useEffect } from 'react';
 import { addDays, format } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): MaintenanceTask {
   return {
@@ -13,6 +14,10 @@ function mapRow(r: any): MaintenanceTask {
     notes: r.notes || undefined, createdAt: r.created_at,
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useMaintenanceTasks() {
   const { householdId } = useAuth();
@@ -43,6 +48,7 @@ export function useMaintenanceTasks() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateMaintenanceTask = useMutation({
@@ -53,11 +59,13 @@ export function useMaintenanceTasks() {
       }).eq('id', t.id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const deleteMaintenanceTask = useMutation({
     mutationFn: async (id: string) => { await supabase.from('maintenance_tasks').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const completeMaintenanceTask = useMutation({
@@ -71,6 +79,7 @@ export function useMaintenanceTasks() {
       }).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

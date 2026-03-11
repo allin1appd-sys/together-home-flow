@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Reminder } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): Reminder {
   return {
@@ -12,6 +13,10 @@ function mapRow(r: any): Reminder {
     repeat: r.repeat, snoozedUntil: r.snoozed_until || undefined, createdAt: r.created_at,
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useReminders() {
   const { householdId } = useAuth();
@@ -43,6 +48,7 @@ export function useReminders() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateReminder = useMutation({
@@ -53,11 +59,13 @@ export function useReminders() {
       }).eq('id', r.id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const deleteReminder = useMutation({
     mutationFn: async (id: string) => { await supabase.from('reminders').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const toggleReminder = useMutation({
@@ -67,6 +75,7 @@ export function useReminders() {
       await supabase.from('reminders').update({ is_checked: !r.isChecked }).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const snoozeReminder = useMutation({
@@ -74,6 +83,7 @@ export function useReminders() {
       await supabase.from('reminders').update({ snoozed_until: until }).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

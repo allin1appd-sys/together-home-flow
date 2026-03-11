@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { GroceryItem } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): GroceryItem {
   return {
@@ -12,6 +13,10 @@ function mapRow(r: any): GroceryItem {
     status: r.status,
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useGroceries() {
   const { householdId } = useAuth();
@@ -44,11 +49,29 @@ export function useGroceries() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
+  });
+
+  const updateGrocery = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<GroceryItem> }) => {
+      const dbUpdates: any = {};
+      if (updates.name !== undefined) dbUpdates.name = updates.name;
+      if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+      if (updates.unit !== undefined) dbUpdates.unit = updates.unit || null;
+      if (updates.category !== undefined) dbUpdates.category = updates.category;
+      if (updates.storageLocation !== undefined) dbUpdates.storage_location = updates.storageLocation;
+      if (updates.expirationDate !== undefined) dbUpdates.expiration_date = updates.expirationDate || null;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+      await supabase.from('groceries').update(dbUpdates).eq('id', id);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const removeGrocery = useMutation({
     mutationFn: async (id: string) => { await supabase.from('groceries').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const decrementGrocery = useMutation({
@@ -62,11 +85,13 @@ export function useGroceries() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {
     groceries, isLoading,
     addGrocery: (i: GroceryItem) => addGrocery.mutate(i),
+    updateGrocery: (id: string, updates: Partial<GroceryItem>) => updateGrocery.mutate({ id, updates }),
     removeGrocery: (id: string) => removeGrocery.mutate(id),
     decrementGrocery: (id: string) => decrementGrocery.mutate(id),
   };

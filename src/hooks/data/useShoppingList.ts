@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ShoppingListItem } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): ShoppingListItem {
   return {
@@ -11,6 +12,10 @@ function mapRow(r: any): ShoppingListItem {
     note: r.note || undefined,
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useShoppingList() {
   const { householdId } = useAuth();
@@ -42,6 +47,7 @@ export function useShoppingList() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const toggleShoppingItem = useMutation({
@@ -51,11 +57,13 @@ export function useShoppingList() {
       await supabase.from('shopping_list').update({ is_purchased: !item.isPurchased }).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const removeShoppingItem = useMutation({
     mutationFn: async (id: string) => { await supabase.from('shopping_list').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateShoppingItem = useMutation({
@@ -69,6 +77,7 @@ export function useShoppingList() {
       await supabase.from('shopping_list').update(dbUpdates).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const clearCompletedShopping = useMutation({
@@ -76,6 +85,7 @@ export function useShoppingList() {
       await supabase.from('shopping_list').delete().eq('household_id', householdId!).eq('is_purchased', true);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const suggestToShoppingList = useMutation({
@@ -88,6 +98,7 @@ export function useShoppingList() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

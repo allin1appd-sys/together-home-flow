@@ -4,10 +4,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { MealPlan } from '@/types';
 import { useEffect } from 'react';
 import { addDays, format, subDays } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): MealPlan {
   return { id: r.id, date: r.date, mealType: r.meal_type, recipeId: r.recipe_id || undefined, customMealName: r.custom_meal_name || undefined };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useMealPlans() {
   const { householdId } = useAuth();
@@ -38,11 +43,13 @@ export function useMealPlans() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const removeMealPlan = useMutation({
     mutationFn: async (id: string) => { await supabase.from('meal_plans').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateMealPlan = useMutation({
@@ -55,6 +62,7 @@ export function useMealPlans() {
       await supabase.from('meal_plans').update(dbUpdates).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const copyLastWeekMeals = useMutation({
@@ -79,6 +87,7 @@ export function useMealPlans() {
       if (inserts.length > 0) await supabase.from('meal_plans').insert(inserts as any[]);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

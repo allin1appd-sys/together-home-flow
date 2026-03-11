@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Note } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any): Note {
   return {
@@ -10,6 +11,10 @@ function mapRow(r: any): Note {
     isPinned: r.is_pinned, createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useNotes() {
   const { householdId } = useAuth();
@@ -40,6 +45,7 @@ export function useNotes() {
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const updateNote = useMutation({
@@ -50,11 +56,13 @@ export function useNotes() {
       }).eq('id', n.id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const deleteNote = useMutation({
     mutationFn: async (id: string) => { await supabase.from('notes').delete().eq('id', id); },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const toggleNotePin = useMutation({
@@ -64,6 +72,7 @@ export function useNotes() {
       await supabase.from('notes').update({ is_pinned: !n.isPinned, updated_at: new Date().toISOString() }).eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {

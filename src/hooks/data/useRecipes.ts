@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Recipe } from '@/types';
 import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 function mapRow(r: any, ingredients: any[]): Recipe {
   return {
@@ -13,6 +14,10 @@ function mapRow(r: any, ingredients: any[]): Recipe {
     })),
   };
 }
+
+const onMutationError = (error: Error) => {
+  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+};
 
 export function useRecipes() {
   const { householdId } = useAuth();
@@ -53,6 +58,7 @@ export function useRecipes() {
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   const removeRecipe = useMutation({
@@ -61,6 +67,7 @@ export function useRecipes() {
       await supabase.from('recipes').delete().eq('id', id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+    onError: onMutationError,
   });
 
   return {
