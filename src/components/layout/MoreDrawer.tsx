@@ -29,7 +29,7 @@ export function MoreDrawer({ open, onOpenChange }: Props) {
           {items.map((item) => (
             <button
               key={item.path}
-              disabled={item.disabled}
+              onClick={() => {
               onClick={() => {
                 navigate(item.path);
                 onOpenChange(false);
