@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
+import { useHousehold } from '@/hooks/useHousehold';
 import { useFamilyMembers } from '@/hooks/data/useFamilyMembers';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import { useHouseholdInvites } from '@/hooks/data/useHouseholdInvites';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Sun, Moon, Monitor, Plus, X, LogOut, Bell } from 'lucide-react';
+import { Sun, Moon, Monitor, Plus, X, LogOut, Bell, Copy, UserPlus, Check, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const themes = [
   { value: 'light', label: 'Light', icon: Sun },
@@ -26,12 +30,16 @@ const MEMBER_COLORS = [
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { updateProfile } = useHousehold();
   const { familyMembers, addFamilyMember, removeFamilyMember } = useFamilyMembers();
   const { preferences, updatePreference } = useNotificationPreferences();
+  const { invites, createInvite, deleteInvite, isCreating } = useHouseholdInvites();
   const [newMemberName, setNewMemberName] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [displayName, setDisplayName] = useState(user?.user_metadata?.display_name || '');
+  const [savingName, setSavingName] = useState(false);
   const navigate = useNavigate();
-
-  const displayName = user?.user_metadata?.display_name || user?.email || '';
 
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
@@ -39,6 +47,27 @@ const Settings = () => {
     const nextColor = MEMBER_COLORS.find(c => !usedColors.includes(c)) || MEMBER_COLORS[familyMembers.length % MEMBER_COLORS.length];
     addFamilyMember({ id: `fm-${Date.now()}`, name: newMemberName.trim(), color: nextColor });
     setNewMemberName('');
+  };
+
+  const handleCopyCode = (code: string, id: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedId(id);
+    toast.success('Code copied!');
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleSaveName = async () => {
+    if (!displayName.trim()) return;
+    setSavingName(true);
+    try {
+      await updateProfile(displayName.trim());
+      toast.success('Name updated');
+      setEditingName(false);
+    } catch {
+      toast.error('Failed to update name');
+    } finally {
+      setSavingName(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -59,8 +88,53 @@ const Settings = () => {
           </div>
           <div className="space-y-1.5">
             <Label className="text-sm">Display Name</Label>
-            <p className="text-sm text-muted-foreground">{displayName}</p>
+            {editingName ? (
+              <div className="flex gap-2">
+                <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="flex-1 h-9 text-sm" onKeyDown={(e) => e.key === 'Enter' && handleSaveName()} autoFocus />
+                <Button size="sm" onClick={handleSaveName} disabled={savingName} className="h-9 px-3">
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingName(false)} className="h-9 px-3">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground flex-1">{displayName || user?.email}</p>
+                <button onClick={() => setEditingName(true)} className="p-1 text-muted-foreground hover:text-foreground">
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <UserPlus className="h-4 w-4" /> Invite Family
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-3">
+          <p className="text-xs text-muted-foreground">Generate a code to invite someone to your household. Codes expire in 7 days.</p>
+          <Button size="sm" onClick={createInvite} disabled={isCreating} className="w-full">
+            {isCreating ? 'Generating...' : 'Generate Invite Code'}
+          </Button>
+          {invites.map((inv: any) => (
+            <div key={inv.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50">
+              <code className="text-sm font-mono font-bold tracking-widest flex-1">{inv.code}</code>
+              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                expires {format(new Date(inv.expires_at), 'MMM d')}
+              </span>
+              <button onClick={() => handleCopyCode(inv.code, inv.id)} className="p-1 text-muted-foreground hover:text-foreground">
+                {copiedId === inv.id ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+              <button onClick={() => deleteInvite(inv.id)} className="p-1 text-muted-foreground hover:text-destructive">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
         </CardContent>
       </Card>
 

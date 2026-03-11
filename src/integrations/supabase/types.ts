@@ -125,6 +125,41 @@ export type Database = {
           },
         ]
       }
+      household_invites: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          household_id: string
+          id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          household_id: string
+          id?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          household_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "household_invites_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household_members: {
         Row: {
           household_id: string
@@ -764,6 +799,7 @@ export type Database = {
     }
     Functions: {
       is_household_member: { Args: { _household_id: string }; Returns: boolean }
+      join_household_by_code: { Args: { _code: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
