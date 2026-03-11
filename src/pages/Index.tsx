@@ -81,6 +81,14 @@ const Dashboard = () => {
   const nextTrip = trips.find((t) => t.status === 'upcoming');
   const tripCountdown = nextTrip ? differenceInDays(parseISO(nextTrip.startDate), now) : null;
 
+  // Budget summary
+  const monthStart = startOfMonth(now);
+  const monthEnd = endOfMonth(now);
+  const monthlyTxns = transactions.filter((t) => isWithinInterval(parseISO(t.date), { start: monthStart, end: monthEnd }));
+  const monthIncome = monthlyTxns.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const monthExpenses = monthlyTxns.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const monthBalance = monthIncome - monthExpenses;
+
   const priorityColor: Record<string, string> = {
     urgent: 'bg-destructive text-destructive-foreground',
     high: 'bg-warning text-warning-foreground',
