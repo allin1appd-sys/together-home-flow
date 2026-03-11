@@ -62,6 +62,14 @@ const mockMaintenanceTasks: MaintenanceTask[] = [
   { id: 'mt4', title: 'Clean gutters', frequencyDays: 180, lastCompleted: format(subDays(new Date(), 50), 'yyyy-MM-dd'), nextDue: format(addDays(new Date(), 130), 'yyyy-MM-dd'), createdAt: yesterday },
 ];
 
+const mockNotes: Note[] = [
+  { id: 'note1', title: 'WiFi Password', body: 'Network: HomeHub5G\nPassword: sunshine2024!', color: 'blue', isPinned: true, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note2', title: 'Grocery run Saturday', body: 'Don\'t forget the farmers market closes at 1pm', color: 'green', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note3', title: 'Plumber visit', body: 'Tuesday 10am — Mike\'s Plumbing (555-0123)', color: 'orange', isPinned: true, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note4', title: 'Movie night picks', body: '• The Grand Budapest Hotel\n• Spirited Away\n• Knives Out', color: 'purple', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
+  { id: 'note5', title: 'Return Amazon package', color: 'pink', isPinned: false, createdAt: yesterday, updatedAt: yesterday },
+];
+
 interface HomeStore {
   tasks: Task[];
   groceries: GroceryItem[];
