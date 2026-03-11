@@ -259,4 +259,7 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
     }
     return { budgetLimits: [...s.budgetLimits, { category: category as any, limit }] };
   }),
+  addFamilyMember: (member) => set((s) => ({ familyMembers: [...s.familyMembers, member] })),
+  removeFamilyMember: (id) => set((s) => ({ familyMembers: s.familyMembers.filter((m) => m.id !== id) })),
+  setOnboardingComplete: (val) => set({ onboardingComplete: val }),
 }), { name: 'homehub-store' }));
