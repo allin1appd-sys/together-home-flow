@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/hooks/useAuth";
+import AuthGuard from "@/components/auth/AuthGuard";
 import { AppShell } from "@/components/layout/AppShell";
 import Index from "./pages/Index";
 import Tasks from "./pages/Tasks";
@@ -16,6 +18,10 @@ import Reminders from "./pages/Reminders";
 import Maintenance from "./pages/Maintenance";
 import Notes from "./pages/Notes";
 import Budget from "./pages/Budget";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,22 +33,29 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppShell>
+          <AuthProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/groceries" element={<Groceries />} />
-              <Route path="/meals" element={<Meals />} />
-              <Route path="/trips" element={<Trips />} />
-              <Route path="/shopping" element={<ShoppingList />} />
-              <Route path="/reminders" element={<Reminders />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/notes" element={<Notes />} />
-              <Route path="/budget" element={<Budget />} />
-              <Route path="/settings" element={<Settings />} />
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
+              {/* Protected routes */}
+              <Route path="/" element={<AuthGuard><AppShell><Index /></AppShell></AuthGuard>} />
+              <Route path="/tasks" element={<AuthGuard><AppShell><Tasks /></AppShell></AuthGuard>} />
+              <Route path="/groceries" element={<AuthGuard><AppShell><Groceries /></AppShell></AuthGuard>} />
+              <Route path="/meals" element={<AuthGuard><AppShell><Meals /></AppShell></AuthGuard>} />
+              <Route path="/trips" element={<AuthGuard><AppShell><Trips /></AppShell></AuthGuard>} />
+              <Route path="/shopping" element={<AuthGuard><AppShell><ShoppingList /></AppShell></AuthGuard>} />
+              <Route path="/reminders" element={<AuthGuard><AppShell><Reminders /></AppShell></AuthGuard>} />
+              <Route path="/maintenance" element={<AuthGuard><AppShell><Maintenance /></AppShell></AuthGuard>} />
+              <Route path="/notes" element={<AuthGuard><AppShell><Notes /></AppShell></AuthGuard>} />
+              <Route path="/budget" element={<AuthGuard><AppShell><Budget /></AppShell></AuthGuard>} />
+              <Route path="/settings" element={<AuthGuard><AppShell><Settings /></AppShell></AuthGuard>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AppShell>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
