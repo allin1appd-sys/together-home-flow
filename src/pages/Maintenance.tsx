@@ -112,7 +112,7 @@ function MaintenanceCard({
 }
 
 const Maintenance = () => {
-  const { maintenanceTasks, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask } = useHomeStore();
+  const { maintenanceTasks, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask, familyMembers } = useHomeStore();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<MaintenanceTask | null>(null);
 
