@@ -98,6 +98,8 @@ interface HomeStore {
   transactions: Transaction[];
   budgetLimits: BudgetLimit[];
   userName: string;
+  familyMembers: FamilyMember[];
+  onboardingComplete: boolean;
   addTask: (task: Task) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
