@@ -114,6 +114,7 @@ export const useHomeStore = create<HomeStore>()(persist((set) => ({
   recipes: mockRecipes,
   reminders: mockReminders,
   trips: mockTrips,
+  maintenanceTasks: mockMaintenanceTasks,
   userName: 'Alex',
 
   addTask: (task) => set((s) => ({ tasks: [task, ...s.tasks] })),
