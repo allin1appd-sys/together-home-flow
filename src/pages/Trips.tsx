@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plane, MapPin, Calendar, Plus, Trash2, Clock } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
+import DatePicker from '@/components/shared/DatePicker';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Trip } from '@/types';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
