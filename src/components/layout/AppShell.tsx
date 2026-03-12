@@ -6,7 +6,7 @@ import { useLocalNotifications } from '@/hooks/useLocalNotifications';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
-  usePushNotifications();
+  useLocalNotifications();
 
   return (
     <div className="min-h-screen bg-background safe-top">
