@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Sun, Moon, Monitor, Plus, X, LogOut, Bell, Copy, UserPlus, Check, Pencil, Home, Users, Trash2 } from 'lucide-react';
+import { Sun, Moon, Monitor, Plus, X, LogOut, Bell, Copy, Share2, Check, Pencil, Home, Users, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
