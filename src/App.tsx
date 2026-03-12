@@ -18,10 +18,8 @@ import Reminders from "./pages/Reminders";
 import Maintenance from "./pages/Maintenance";
 import Notes from "./pages/Notes";
 import Budget from "./pages/Budget";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import PhoneSignup from "./pages/PhoneSignup";
+import JoinHousehold from "./pages/JoinHousehold";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,10 +34,8 @@ const App = () => (
           <AuthProvider>
             <Routes>
               {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/phone-signup" element={<PhoneSignup />} />
+              <Route path="/join/:code" element={<JoinHousehold />} />
 
               {/* Protected routes */}
               <Route path="/" element={<AuthGuard><AppShell><Index /></AppShell></AuthGuard>} />
