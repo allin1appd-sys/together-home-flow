@@ -311,7 +311,7 @@ const Groceries = () => {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1.5"><Label>Expiration date</Label><Input type="date" value={gExpDate} onChange={(e) => setGExpDate(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Expiration date</Label><DatePicker value={gExpDate} onChange={setGExpDate} placeholder="No expiration" /></div>
               <Button className="w-full" onClick={handleSaveGrocery}>{editingGrocery ? 'Save Changes' : 'Add to Inventory'}</Button>
             </div>
           </SheetContent>

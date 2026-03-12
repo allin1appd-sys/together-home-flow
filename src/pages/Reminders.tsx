@@ -137,7 +137,7 @@ const Reminders = () => {
               <div className="space-y-1.5"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Pay electricity bill" /></div>
               <div className="space-y-1.5"><Label>Description (optional)</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Additional notes..." rows={2} /></div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label>Due Date</Label><Input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label>Due Date</Label><DatePicker value={form.dueDate} onChange={(v) => setForm({ ...form, dueDate: v })} /></div>
                 <div className="space-y-1.5"><Label>Lead Time (days)</Label><Input type="number" min={0} max={30} value={form.leadDays} onChange={(e) => setForm({ ...form, leadDays: parseInt(e.target.value) || 0 })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
