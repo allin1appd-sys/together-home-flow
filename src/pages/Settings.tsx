@@ -96,8 +96,8 @@ const Settings = () => {
         <CardHeader className="pb-3"><CardTitle className="text-base">Profile</CardTitle></CardHeader>
         <CardContent className="pt-0 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-sm">Email</Label>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <Label className="text-sm">Phone</Label>
+            <p className="text-sm text-muted-foreground">{user?.user_metadata?.phone || 'Family member'}</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-sm">Display Name</Label>
