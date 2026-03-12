@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Bell, Clock, Plus, Trash2, Check, RotateCcw, AlarmClock } from 'lucide-react';
+import DatePicker from '@/components/shared/DatePicker';
 import { format, parseISO, differenceInDays, addHours, addDays } from 'date-fns';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Reminder, ReminderCategory, ReminderRepeat } from '@/types';
