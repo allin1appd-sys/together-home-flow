@@ -167,23 +167,35 @@ const Settings = () => {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><UserPlus className="h-4 w-4" /> Invite Family</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Share2 className="h-4 w-4" /> Invite Family</CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
-          <p className="text-xs text-muted-foreground">Generate a code to invite someone to your household. Codes expire in 7 days.</p>
+          <p className="text-xs text-muted-foreground">Generate a link to invite someone to your household. They'll just need to enter their name.</p>
           <Button size="sm" onClick={createInvite} disabled={isCreating} className="w-full">
-            {isCreating ? 'Generating...' : 'Generate Invite Code'}
+            {isCreating ? 'Generating...' : 'Generate Invite Link'}
           </Button>
-          {invites.map((inv: any) => (
-            <div key={inv.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50">
-              <code className="text-sm font-mono font-bold tracking-widest flex-1">{inv.code}</code>
-              <span className="text-[10px] text-muted-foreground whitespace-nowrap">expires {format(new Date(inv.expires_at), 'MMM d')}</span>
-              <button onClick={() => handleCopyCode(inv.code, inv.id)} className="p-1 text-muted-foreground hover:text-foreground">
-                {copiedId === inv.id ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-              </button>
-              <button onClick={() => deleteInvite(inv.id)} className="p-1 text-muted-foreground hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
-            </div>
-          ))}
+          {invites.map((inv: any) => {
+            const joinLink = `${window.location.origin}/join/${inv.code}`;
+            return (
+              <div key={inv.id} className="space-y-2 p-2.5 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-muted-foreground flex-1 truncate">{joinLink}</p>
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">expires {format(new Date(inv.expires_at), 'MMM d')}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => { navigator.clipboard.writeText(joinLink); handleCopyCode(inv.code, inv.id); }}>
+                    {copiedId === inv.id ? <><Check className="h-3 w-3 mr-1" /> Copied!</> : <><Copy className="h-3 w-3 mr-1" /> Copy Link</>}
+                  </Button>
+                  {navigator.share && (
+                    <Button size="sm" variant="outline" className="h-8 px-3" onClick={() => navigator.share({ title: 'Join my HomeHub', url: joinLink })}>
+                      <Share2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <button onClick={() => deleteInvite(inv.id)} className="p-1 text-muted-foreground hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
+                </div>
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
 
