@@ -2,11 +2,11 @@ import { ReactNode, useState } from 'react';
 import { BottomTabBar } from './BottomTabBar';
 import { GlobalSearch } from './GlobalSearch';
 import { Search } from 'lucide-react';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useLocalNotifications } from '@/hooks/useLocalNotifications';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
-  usePushNotifications();
+  useLocalNotifications();
 
   return (
     <div className="min-h-screen bg-background safe-top">
