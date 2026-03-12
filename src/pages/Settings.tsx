@@ -85,7 +85,7 @@ const Settings = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/login');
+    navigate('/phone-signup');
   };
 
   return (
