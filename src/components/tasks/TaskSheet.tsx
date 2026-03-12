@@ -8,6 +8,7 @@ import { Plus, X } from 'lucide-react';
 import { Task, Priority, TaskCategory, SubTask } from '@/types';
 import { useFamilyMembers } from '@/hooks/data/useFamilyMembers';
 import { format } from 'date-fns';
+import DatePicker from '@/components/shared/DatePicker';
 
 const categories: TaskCategory[] = ['cleaning', 'errands', 'repairs', 'kids', 'pets', 'cooking', 'shopping', 'other'];
 const priorities: Priority[] = ['low', 'medium', 'high', 'urgent'];
