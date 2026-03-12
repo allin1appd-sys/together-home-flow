@@ -15,6 +15,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import { cn } from '@/lib/utils';
 import { GroceryItem, ShoppingListItem, StorageLocation, ShoppingCategory } from '@/types';
 import { differenceInDays, parseISO } from 'date-fns';
+import DatePicker from '@/components/shared/DatePicker';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
@@ -310,7 +311,7 @@ const Groceries = () => {
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1.5"><Label>Expiration date</Label><Input type="date" value={gExpDate} onChange={(e) => setGExpDate(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>Expiration date</Label><DatePicker value={gExpDate} onChange={setGExpDate} placeholder="No expiration" /></div>
               <Button className="w-full" onClick={handleSaveGrocery}>{editingGrocery ? 'Save Changes' : 'Add to Inventory'}</Button>
             </div>
           </SheetContent>

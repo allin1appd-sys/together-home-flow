@@ -8,6 +8,7 @@ import { Plus, X } from 'lucide-react';
 import { Task, Priority, TaskCategory, SubTask } from '@/types';
 import { useFamilyMembers } from '@/hooks/data/useFamilyMembers';
 import { format } from 'date-fns';
+import DatePicker from '@/components/shared/DatePicker';
 
 const categories: TaskCategory[] = ['cleaning', 'errands', 'repairs', 'kids', 'pets', 'cooking', 'shopping', 'other'];
 const priorities: Priority[] = ['low', 'medium', 'high', 'urgent'];
@@ -79,7 +80,7 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
             </Select>
           </div>
           <div className="flex gap-2">
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="flex-1" />
+            <DatePicker value={dueDate} onChange={setDueDate} className="flex-1" />
             <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}>
               <SelectTrigger className="flex-1"><SelectValue placeholder="Assign to..." /></SelectTrigger>
               <SelectContent>

@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plane, MapPin, Calendar, Plus, Trash2, Clock } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
+import DatePicker from '@/components/shared/DatePicker';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Trip } from '@/types';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
@@ -126,7 +127,7 @@ const Trips = () => {
               <TabsContent value="details" className="space-y-4 mt-3">
                 <div className="space-y-1.5"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Beach Getaway" /></div>
                 <div className="space-y-1.5"><Label>Destination</Label><Input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value })} placeholder="Santa Monica" /></div>
-                <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Start Date</Label><Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div><div className="space-y-1.5"><Label>End Date</Label><Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div></div>
+                <div className="grid grid-cols-2 gap-3"><div className="space-y-1.5"><Label>Start Date</Label><DatePicker value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} /></div><div className="space-y-1.5"><Label>End Date</Label><DatePicker value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} /></div></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5"><Label>Category</Label><Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{TRIP_CATEGORIES.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-1.5"><Label>Status</Label><Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as Trip['status'] })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="upcoming">Upcoming</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="completed">Completed</SelectItem></SelectContent></Select></div>
