@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.2fc7b9e2e7d041b39b05178a47f441b8',
+  appId: 'com.homehub.app',
   appName: 'HomeHub',
   webDir: 'dist',
   server: {
