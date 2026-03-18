@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useHousehold } from '@/hooks/useHousehold';
@@ -11,25 +12,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Sun, Moon, Monitor, Plus, X, LogOut, Bell, Copy, Share2, Check, Pencil, Home, Users, Trash2 } from 'lucide-react';
+import { Sun, Moon, Monitor, Plus, X, LogOut, Bell, Copy, Share2, Check, Pencil, Home, Users, Trash2, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 
-const themes = [
-  { value: 'light', label: 'Light', icon: Sun },
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'system', label: 'System', icon: Monitor },
-] as const;
-
 const MEMBER_COLORS = [
   'hsl(220, 70%, 55%)', 'hsl(340, 70%, 55%)', 'hsl(150, 60%, 45%)', 'hsl(30, 80%, 55%)',
   'hsl(280, 60%, 55%)', 'hsl(190, 70%, 45%)', 'hsl(45, 80%, 50%)', 'hsl(0, 65%, 55%)',
 ];
 
+const languages = [
+  { value: 'en', label: 'English', nativeLabel: 'English' },
+  { value: 'ar', label: 'Arabic', nativeLabel: 'العربية' },
+  { value: 'he', label: 'Hebrew', nativeLabel: 'עברית' },
+] as const;
+
 const Settings = () => {
+  const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { updateProfile } = useHousehold();
@@ -47,6 +49,12 @@ const Settings = () => {
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const themes = [
+    { value: 'light', label: t('settings.light'), icon: Sun },
+    { value: 'dark', label: t('settings.dark'), icon: Moon },
+    { value: 'system', label: t('settings.system'), icon: Monitor },
+  ] as const;
+
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
     const usedColors = familyMembers.map(m => m.color);
@@ -58,7 +66,7 @@ const Settings = () => {
   const handleCopyCode = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
     setCopiedId(id);
-    toast.success('Code copied!');
+    toast.success(t('settings.codeCopied'));
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -67,10 +75,10 @@ const Settings = () => {
     setSavingName(true);
     try {
       await updateProfile(displayName.trim());
-      toast.success('Name updated');
+      toast.success(t('settings.nameUpdated'));
       setEditingName(false);
     } catch {
-      toast.error('Failed to update name');
+      toast.error(t('settings.nameUpdateFailed'));
     } finally {
       setSavingName(false);
     }
@@ -79,7 +87,7 @@ const Settings = () => {
   const handleSaveHouseholdName = () => {
     if (!householdName.trim()) return;
     updateHouseholdName(householdName.trim());
-    toast.success('Household name updated');
+    toast.success(t('settings.householdNameUpdated'));
     setEditingHouseholdName(false);
   };
 
@@ -88,19 +96,23 @@ const Settings = () => {
     navigate('/phone-signup');
   };
 
+  const handleLanguageChange = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
     <div className="px-4 pt-6 space-y-5 pb-24">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold">{t('settings.settings')}</h1>
 
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base">Profile</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base">{t('settings.profile')}</CardTitle></CardHeader>
         <CardContent className="pt-0 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-sm">Phone</Label>
-            <p className="text-sm text-muted-foreground">{user?.user_metadata?.phone || 'Family member'}</p>
+            <Label className="text-sm">{t('settings.phone')}</Label>
+            <p className="text-sm text-muted-foreground">{user?.user_metadata?.phone || t('settings.familyMember')}</p>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm">Display Name</Label>
+            <Label className="text-sm">{t('settings.displayName')}</Label>
             {editingName ? (
               <div className="flex gap-2">
                 <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="flex-1 h-9 text-sm" onKeyDown={(e) => e.key === 'Enter' && handleSaveName()} autoFocus />
@@ -117,14 +129,13 @@ const Settings = () => {
         </CardContent>
       </Card>
 
-      {/* Household Management */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><Home className="h-4 w-4" /> Household</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Home className="h-4 w-4" /> {t('settings.household')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-sm">Household Name</Label>
+            <Label className="text-sm">{t('settings.householdName')}</Label>
             {editingHouseholdName ? (
               <div className="flex gap-2">
                 <Input value={householdName} onChange={(e) => setHouseholdName(e.target.value)} className="flex-1 h-9 text-sm" onKeyDown={(e) => e.key === 'Enter' && handleSaveHouseholdName()} autoFocus />
@@ -133,7 +144,7 @@ const Settings = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <p className="text-sm text-muted-foreground flex-1">{household?.name || 'My Home'}</p>
+                <p className="text-sm text-muted-foreground flex-1">{household?.name || t('settings.myHome')}</p>
                 {isOwner && (
                   <button onClick={() => { setHouseholdName(household?.name || ''); setEditingHouseholdName(true); }} className="p-1 text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
                 )}
@@ -142,7 +153,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-sm flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Members ({members.length})</Label>
+            <Label className="text-sm flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {t('settings.members')} ({members.length})</Label>
             <div className="space-y-2">
               {members.map(member => (
                 <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
@@ -150,7 +161,7 @@ const Settings = () => {
                     {member.displayName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{member.displayName}{member.userId === user?.id ? ' (you)' : ''}</p>
+                    <p className="text-sm font-medium truncate">{member.displayName}{member.userId === user?.id ? ` (${t('settings.you')})` : ''}</p>
                     <p className="text-[10px] text-muted-foreground capitalize">{member.role}</p>
                   </div>
                   {isOwner && member.userId !== user?.id && (
@@ -167,12 +178,12 @@ const Settings = () => {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><Share2 className="h-4 w-4" /> Invite Family</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Share2 className="h-4 w-4" /> {t('settings.inviteFamily')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
-          <p className="text-xs text-muted-foreground">Generate a link to invite someone to your household. They'll just need to enter their name.</p>
+          <p className="text-xs text-muted-foreground">{t('settings.inviteDescription')}</p>
           <Button size="sm" onClick={createInvite} disabled={isCreating} className="w-full">
-            {isCreating ? 'Generating...' : 'Generate Invite Link'}
+            {isCreating ? t('settings.generating') : t('settings.generateInviteLink')}
           </Button>
           {invites.map((inv: any) => {
             const joinLink = `${window.location.origin}/join/${inv.code}`;
@@ -180,11 +191,11 @@ const Settings = () => {
               <div key={inv.id} className="space-y-2 p-2.5 rounded-lg bg-muted/50">
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-muted-foreground flex-1 truncate">{joinLink}</p>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">expires {format(new Date(inv.expires_at), 'MMM d')}</span>
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">{t('settings.expires', { date: format(new Date(inv.expires_at), 'MMM d') })}</span>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1 h-8 text-xs" onClick={() => { navigator.clipboard.writeText(joinLink); handleCopyCode(inv.code, inv.id); }}>
-                    {copiedId === inv.id ? <><Check className="h-3 w-3 mr-1" /> Copied!</> : <><Copy className="h-3 w-3 mr-1" /> Copy Link</>}
+                    {copiedId === inv.id ? <><Check className="h-3 w-3 me-1" /> {t('settings.copied')}</> : <><Copy className="h-3 w-3 me-1" /> {t('settings.copyLink')}</>}
                   </Button>
                   {navigator.share && (
                     <Button size="sm" variant="outline" className="h-8 px-3" onClick={() => navigator.share({ title: 'Join my HomeHub', url: joinLink })}>
@@ -200,9 +211,9 @@ const Settings = () => {
       </Card>
 
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base">Family Members</CardTitle></CardHeader>
+        <CardHeader className="pb-3"><CardTitle className="text-base">{t('settings.familyMembers')}</CardTitle></CardHeader>
         <CardContent className="pt-0 space-y-3">
-          <p className="text-xs text-muted-foreground">Labels for task and maintenance assignment (not login accounts)</p>
+          <p className="text-xs text-muted-foreground">{t('settings.familyMembersDesc')}</p>
           {familyMembers.map(member => (
             <div key={member.id} className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ backgroundColor: member.color }}>{member.name.charAt(0).toUpperCase()}</div>
@@ -211,7 +222,7 @@ const Settings = () => {
             </div>
           ))}
           <div className="flex gap-2">
-            <Input placeholder="Add family member" value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddMember()} className="flex-1 h-9 text-sm" />
+            <Input placeholder={t('settings.addFamilyMember')} value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddMember()} className="flex-1 h-9 text-sm" />
             <Button size="sm" variant="outline" onClick={handleAddMember} className="h-9 px-3"><Plus className="h-4 w-4" /></Button>
           </div>
         </CardContent>
@@ -219,31 +230,47 @@ const Settings = () => {
 
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><Bell className="h-4 w-4" /> Notifications</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><Bell className="h-4 w-4" /> {t('settings.notifications')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-sm">Reminders</Label>
+            <Label className="text-sm">{t('nav.reminders')}</Label>
             <Switch checked={preferences.remindersEnabled} onCheckedChange={(v) => updatePreference({ remindersEnabled: v })} />
           </div>
           <div className="flex items-center justify-between">
-            <Label className="text-sm">Tasks</Label>
+            <Label className="text-sm">{t('nav.tasks')}</Label>
             <Switch checked={preferences.tasksEnabled} onCheckedChange={(v) => updatePreference({ tasksEnabled: v })} />
           </div>
           <div className="flex items-center justify-between">
-            <Label className="text-sm">Groceries</Label>
+            <Label className="text-sm">{t('nav.groceries')}</Label>
             <Switch checked={preferences.groceriesEnabled} onCheckedChange={(v) => updatePreference({ groceriesEnabled: v })} />
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-base">Appearance</CardTitle></CardHeader>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2"><Globe className="h-4 w-4" /> {t('settings.language')}</CardTitle>
+        </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-3 gap-2">
-            {themes.map(t => (
-              <button key={t.value} onClick={() => setTheme(t.value)} className={cn('flex flex-col items-center gap-2 rounded-xl p-4 text-sm transition-colors', theme === t.value ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent')}>
-                <t.icon className="h-5 w-5" /><span className="font-medium">{t.label}</span>
+            {languages.map(lng => (
+              <button key={lng.value} onClick={() => handleLanguageChange(lng.value)} className={cn('flex flex-col items-center gap-1 rounded-xl p-4 text-sm transition-colors', i18n.language === lng.value ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent')}>
+                <span className="font-semibold">{lng.nativeLabel}</span>
+                <span className="text-[10px] opacity-70">{lng.label}</span>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3"><CardTitle className="text-base">{t('settings.appearance')}</CardTitle></CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-3 gap-2">
+            {themes.map(t2 => (
+              <button key={t2.value} onClick={() => setTheme(t2.value)} className={cn('flex flex-col items-center gap-2 rounded-xl p-4 text-sm transition-colors', theme === t2.value ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent')}>
+                <t2.icon className="h-5 w-5" /><span className="font-medium">{t2.label}</span>
               </button>
             ))}
           </div>
@@ -251,14 +278,14 @@ const Settings = () => {
       </Card>
 
       <Button variant="destructive" className="w-full gap-2" onClick={handleSignOut}>
-        <LogOut className="h-4 w-4" /> Sign Out
+        <LogOut className="h-4 w-4" /> {t('auth.signOut')}
       </Button>
 
       <ConfirmDialog
         open={!!removeMemberId}
         onOpenChange={(open) => !open && setRemoveMemberId(null)}
-        title="Remove member?"
-        description="This person will lose access to the household."
+        title={t('settings.removeMember')}
+        description={t('settings.removeMemberDesc')}
         onConfirm={() => { if (removeMemberId) removeMember(removeMemberId); setRemoveMemberId(null); }}
       />
     </div>
