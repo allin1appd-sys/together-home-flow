@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMaintenanceTasks } from '@/hooks/data/useMaintenanceTasks';
 import { useFamilyMembers } from '@/hooks/data/useFamilyMembers';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,19 +26,19 @@ import { toast } from 'sonner';
 const spring = { type: 'spring' as const, stiffness: 300, damping: 25 };
 type TaskStatus = 'overdue' | 'due-soon' | 'on-track';
 function getStatus(nextDue: string): TaskStatus { const diff = differenceInDays(parseISO(nextDue), new Date()); if (diff < 0) return 'overdue'; if (diff <= 7) return 'due-soon'; return 'on-track'; }
-const statusConfig: Record<TaskStatus, { label: string; className: string }> = { overdue: { label: 'Overdue', className: 'bg-destructive text-destructive-foreground' }, 'due-soon': { label: 'Due Soon', className: 'bg-warning text-warning-foreground' }, 'on-track': { label: 'On Track', className: 'bg-primary/15 text-primary' } };
 
-function MaintenanceCard({ task, onComplete, onDelete, onEdit }: { task: MaintenanceTask; onComplete: (id: string) => void; onDelete: (id: string) => void; onEdit: (task: MaintenanceTask) => void }) {
+function MaintenanceCard({ task, onComplete, onDelete, onEdit, t }: { task: MaintenanceTask; onComplete: (id: string) => void; onDelete: (id: string) => void; onEdit: (task: MaintenanceTask) => void; t: (key: string, opts?: any) => string }) {
   const x = useMotionValue(0);
   const bgOpacity = useTransform(x, [-120, -60, 0], [1, 0.6, 0]);
   const checkScale = useTransform(x, [-120, -60, 0], [1.2, 0.8, 0]);
   const handleDragEnd = () => { if (x.get() < -100) onComplete(task.id); };
   const status = getStatus(task.nextDue);
+  const statusConfig: Record<TaskStatus, { label: string; className: string }> = { overdue: { label: t('maintenance.overdue'), className: 'bg-destructive text-destructive-foreground' }, 'due-soon': { label: t('maintenance.dueSoon'), className: 'bg-warning text-warning-foreground' }, 'on-track': { label: t('maintenance.onTrack'), className: 'bg-primary/15 text-primary' } };
   const { label, className } = statusConfig[status];
   const daysUntil = differenceInDays(parseISO(task.nextDue), new Date());
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <motion.div className="absolute inset-0 bg-green-500 flex items-center justify-end pr-6 rounded-lg" style={{ opacity: bgOpacity }}><motion.div style={{ scale: checkScale }}><Check className="h-6 w-6 text-white" /></motion.div></motion.div>
+      <motion.div className="absolute inset-0 bg-green-500 flex items-center justify-end pe-6 rounded-lg" style={{ opacity: bgOpacity }}><motion.div style={{ scale: checkScale }}><Check className="h-6 w-6 text-white" /></motion.div></motion.div>
       <motion.div drag="x" dragConstraints={{ left: -150, right: 0 }} dragElastic={0.1} onDragEnd={handleDragEnd} style={{ x }} className="relative z-10">
         <Card className="cursor-pointer" onClick={() => onEdit(task)}>
           <CardContent className="p-3">
@@ -45,8 +46,8 @@ function MaintenanceCard({ task, onComplete, onDelete, onEdit }: { task: Mainten
               <div className="mt-0.5 h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Wrench className="h-4 w-4 text-primary" /></div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2"><span className="text-sm font-medium truncate">{task.title}</span><Badge className={cn('text-[10px] px-1.5 py-0 shrink-0', className)}>{label}</Badge></div>
-                <p className="text-xs text-muted-foreground mt-0.5">Every {task.frequencyDays} days{task.assignedTo && ` · ${task.assignedTo}`}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{daysUntil < 0 ? `${Math.abs(daysUntil)} day${Math.abs(daysUntil) > 1 ? 's' : ''} overdue` : daysUntil === 0 ? 'Due today' : `Due in ${daysUntil} day${daysUntil > 1 ? 's' : ''}`}{task.lastCompleted && ` · Last done ${task.lastCompleted}`}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('maintenance.everyDays', { count: task.frequencyDays })}{task.assignedTo && ` · ${task.assignedTo}`}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{daysUntil < 0 ? t('maintenance.daysOverdue', { count: Math.abs(daysUntil) }) : daysUntil === 0 ? t('maintenance.dueToday') : t('maintenance.dueInDays', { count: daysUntil })}{task.lastCompleted && ` · ${t('maintenance.lastDone', { date: task.lastCompleted })}`}</p>
               </div>
               <button onClick={(e) => { e.stopPropagation(); onDelete(task.id); }} className="p-1 text-muted-foreground active:text-destructive shrink-0"><Trash2 className="h-4 w-4" /></button>
             </div>
@@ -58,6 +59,7 @@ function MaintenanceCard({ task, onComplete, onDelete, onEdit }: { task: Mainten
 }
 
 const Maintenance = () => {
+  const { t } = useTranslation();
   const { householdId } = useAuth();
   const { maintenanceTasks, isLoading, addMaintenanceTask, updateMaintenanceTask, deleteMaintenanceTask, completeMaintenanceTask } = useMaintenanceTasks();
   const { familyMembers } = useFamilyMembers();
@@ -92,30 +94,30 @@ const Maintenance = () => {
   return (
     <PullToRefresh queryKeys={[['maintenance_tasks', householdId!]]}>
       <div className="px-4 pt-6 space-y-4 pb-24">
-        <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Maintenance</h1><Button size="sm" onClick={openNew} className="gap-1"><Plus className="h-4 w-4" /> Add</Button></div>
+        <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">{t('maintenance.maintenance')}</h1><Button size="sm" onClick={openNew} className="gap-1"><Plus className="h-4 w-4" /> {t('common.add')}</Button></div>
         <AnimatePresence>
-          {sorted.length === 0 ? <EmptyState icon={Wrench} title="No maintenance tasks" description="Keep your home in top shape" actionLabel="Add task" onAction={openNew} /> : (
-            <div className="space-y-2">{sorted.map(task => <motion.div key={task.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }} transition={spring}><MaintenanceCard task={task} onComplete={completeMaintenanceTask} onDelete={(id) => setDeleteId(id)} onEdit={openEdit} /></motion.div>)}</div>
+          {sorted.length === 0 ? <EmptyState icon={Wrench} title={t('maintenance.noTasks')} description={t('maintenance.keepHome')} actionLabel={t('maintenance.addTask')} onAction={openNew} /> : (
+            <div className="space-y-2">{sorted.map(task => <motion.div key={task.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }} transition={spring}><MaintenanceCard task={task} onComplete={completeMaintenanceTask} onDelete={(id) => setDeleteId(id)} onEdit={openEdit} t={t} /></motion.div>)}</div>
           )}
         </AnimatePresence>
-        {sorted.length > 0 && <p className="text-xs text-muted-foreground text-center pt-2">← Swipe left to mark done</p>}
+        {sorted.length > 0 && <p className="text-xs text-muted-foreground text-center pt-2">{t('common.swipeLeftDone')}</p>}
 
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-            <SheetHeader><SheetTitle>{editing ? 'Edit Task' : 'New Maintenance Task'}</SheetTitle></SheetHeader>
+            <SheetHeader><SheetTitle>{editing ? t('maintenance.editTask') : t('maintenance.newTask')}</SheetTitle></SheetHeader>
             <div className="space-y-4 pt-4">
-              <div><Label>Task name</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Replace HVAC filter" /></div>
-              <div><Label>Frequency (days)</Label><Input type="number" value={frequencyDays} onChange={(e) => setFrequencyDays(e.target.value)} placeholder="30" /></div>
-              <div><Label>Assigned to (optional)</Label>
-                <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}><SelectTrigger><SelectValue placeholder="Assign to..." /></SelectTrigger><SelectContent><SelectItem value="_none">Unassigned</SelectItem>{familyMembers.map(m => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}</SelectContent></Select>
+              <div><Label>{t('maintenance.taskName')}</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Replace HVAC filter" /></div>
+              <div><Label>{t('maintenance.frequencyDays')}</Label><Input type="number" value={frequencyDays} onChange={(e) => setFrequencyDays(e.target.value)} placeholder="30" /></div>
+              <div><Label>{t('maintenance.assignedToOptional')}</Label>
+                <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}><SelectTrigger><SelectValue placeholder={t('tasks.assignTo')} /></SelectTrigger><SelectContent><SelectItem value="_none">{t('common.unassigned')}</SelectItem>{familyMembers.map(m => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}</SelectContent></Select>
               </div>
-              <div><Label>Notes (optional)</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any details…" rows={2} /></div>
-              <Button className="w-full" onClick={handleSave}>{editing ? 'Update' : 'Add Task'}</Button>
+              <div><Label>{t('maintenance.notesOptional')}</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('maintenance.anyDetails')} rows={2} /></div>
+              <Button className="w-full" onClick={handleSave}>{editing ? t('trips.update') : t('maintenance.addTask')}</Button>
             </div>
           </SheetContent>
         </Sheet>
 
-        <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title="Delete maintenance task?" description="This task will be permanently removed." onConfirm={() => { if (deleteId) deleteMaintenanceTask(deleteId); setDeleteId(null); }} />
+        <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title={t('maintenance.deleteTask')} description={t('maintenance.deleteTaskDesc')} onConfirm={() => { if (deleteId) deleteMaintenanceTask(deleteId); setDeleteId(null); }} />
       </div>
     </PullToRefresh>
   );
