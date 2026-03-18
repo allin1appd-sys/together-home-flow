@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ interface TaskSheetProps {
 }
 
 const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskSheetProps) => {
+  const { t } = useTranslation();
   const { familyMembers } = useFamilyMembers();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -65,32 +67,32 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-        <SheetHeader><SheetTitle>{editingTask ? 'Edit Task' : 'New Task'}</SheetTitle></SheetHeader>
+        <SheetHeader><SheetTitle>{editingTask ? t('tasks.editTask') : t('tasks.newTask')}</SheetTitle></SheetHeader>
         <div className="space-y-4 pt-4 pb-6">
-          <Input placeholder="Task title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <Textarea placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[60px] resize-none" />
+          <Input placeholder={t('tasks.taskTitle')} value={title} onChange={(e) => setTitle(e.target.value)} />
+          <Textarea placeholder={t('tasks.descriptionOptional')} value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[60px] resize-none" />
           <div className="flex gap-2">
             <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
               <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-              <SelectContent>{priorities.map((p) => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}</SelectContent>
+              <SelectContent>{priorities.map((p) => <SelectItem key={p} value={p} className="capitalize">{t(`tasks.${p}`)}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={category} onValueChange={(v) => setCategory(v as TaskCategory)}>
               <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-              <SelectContent>{categories.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}</SelectContent>
+              <SelectContent>{categories.map((c) => <SelectItem key={c} value={c} className="capitalize">{t(`tasks.${c}`)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="flex gap-2">
             <DatePicker value={dueDate} onChange={setDueDate} className="flex-1" />
             <Select value={assignedTo || '_none'} onValueChange={(v) => setAssignedTo(v === '_none' ? '' : v)}>
-              <SelectTrigger className="flex-1"><SelectValue placeholder="Assign to..." /></SelectTrigger>
+              <SelectTrigger className="flex-1"><SelectValue placeholder={t('tasks.assignTo')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="_none">Unassigned</SelectItem>
+                <SelectItem value="_none">{t('common.unassigned')}</SelectItem>
                 {familyMembers.map((m) => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <span className="text-sm font-medium text-foreground">Sub-tasks</span>
+            <span className="text-sm font-medium text-foreground">{t('tasks.subTasks')}</span>
             {subTasks.map((st) => (
               <div key={st.id} className="flex items-center gap-2">
                 <span className="text-sm flex-1 truncate">{st.title}</span>
@@ -98,11 +100,11 @@ const TaskSheet = ({ open, onOpenChange, editingTask, onAdd, onUpdate }: TaskShe
               </div>
             ))}
             <div className="flex gap-2">
-              <Input placeholder="Add sub-task" value={newSubTask} onChange={(e) => setNewSubTask(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddSubTask()} className="flex-1 h-8 text-sm" />
+              <Input placeholder={t('tasks.addSubTask')} value={newSubTask} onChange={(e) => setNewSubTask(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddSubTask()} className="flex-1 h-8 text-sm" />
               <Button size="sm" variant="outline" onClick={handleAddSubTask} className="h-8 px-2"><Plus className="h-3.5 w-3.5" /></Button>
             </div>
           </div>
-          <Button className="w-full" onClick={handleSubmit}>{editingTask ? 'Save Changes' : 'Add Task'}</Button>
+          <Button className="w-full" onClick={handleSubmit}>{editingTask ? t('common.saveChanges') : t('tasks.addTask')}</Button>
         </div>
       </SheetContent>
     </Sheet>
