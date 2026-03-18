@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,21 +22,22 @@ interface ConfirmDialogProps {
 export default function ConfirmDialog({
   open,
   onOpenChange,
-  title = 'Are you sure?',
-  description = 'This action cannot be undone.',
-  confirmLabel = 'Delete',
+  title,
+  description,
+  confirmLabel,
   onConfirm,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle>{title || t('common.areYouSure')}</AlertDialogTitle>
+          <AlertDialogDescription>{description || t('common.cannotBeUndone')}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{confirmLabel}</AlertDialogAction>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{confirmLabel || t('common.delete')}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

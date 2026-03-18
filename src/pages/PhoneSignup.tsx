@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 import { Home, Loader2, Phone, Lock } from 'lucide-react';
 
 export default function PhoneSignup() {
+  const { t } = useTranslation();
   const { signUpWithPhone, signInWithPhone } = useAuth();
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
@@ -20,11 +22,11 @@ export default function PhoneSignup() {
     e.preventDefault();
 
     if (!phone.trim() || phone.replace(/[^0-9]/g, '').length < 7) {
-      toast.error('Please enter a valid phone number');
+      toast.error(t('auth.validPhoneError'));
       return;
     }
     if (pin.length !== 4) {
-      toast.error('PIN must be exactly 4 digits');
+      toast.error(t('auth.pinLengthError'));
       return;
     }
 
@@ -35,7 +37,7 @@ export default function PhoneSignup() {
       setLoading(false);
       if (error) {
         if (error.message?.includes('already registered')) {
-          toast.error('This phone number is already registered. Try signing in.');
+          toast.error(t('auth.alreadyRegistered'));
           setMode('login');
         } else {
           toast.error(error.message);
@@ -47,7 +49,7 @@ export default function PhoneSignup() {
       const { error } = await signInWithPhone(phone, pin);
       setLoading(false);
       if (error) {
-        toast.error('Invalid phone number or PIN');
+        toast.error(t('auth.invalidCredentials'));
       } else {
         navigate('/', { replace: true });
       }
@@ -62,19 +64,17 @@ export default function PhoneSignup() {
             <Home className="h-7 w-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl">
-            {mode === 'signup' ? 'Welcome to HomeHub' : 'Welcome back'}
+            {mode === 'signup' ? t('auth.welcomeToHomeHub') : t('auth.welcomeBack')}
           </CardTitle>
           <CardDescription>
-            {mode === 'signup'
-              ? 'Enter your phone number and create a 4-digit PIN'
-              : 'Sign in with your phone number and PIN'}
+            {mode === 'signup' ? t('auth.signupDescription') : t('auth.loginDescription')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="phone" className="flex items-center gap-1.5">
-                <Phone className="h-3.5 w-3.5" /> Phone Number
+                <Phone className="h-3.5 w-3.5" /> {t('auth.phoneNumber')}
               </Label>
               <Input
                 id="phone"
@@ -89,7 +89,7 @@ export default function PhoneSignup() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="pin" className="flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5" /> 4-Digit PIN
+                <Lock className="h-3.5 w-3.5" /> {t('auth.fourDigitPin')}
               </Label>
               <Input
                 id="pin"
@@ -108,23 +108,21 @@ export default function PhoneSignup() {
                 className="h-12 text-center text-2xl tracking-[0.5em] font-mono"
               />
               <p className="text-[11px] text-muted-foreground text-center">
-                {mode === 'signup' ? 'Choose a PIN to secure your account' : 'Enter your PIN to sign in'}
+                {mode === 'signup' ? t('auth.choosePinHint') : t('auth.enterPinHint')}
               </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <Button className="w-full h-12 text-base" type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === 'signup' ? 'Get Started 🚀' : 'Sign In'}
+              {loading && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {mode === 'signup' ? t('auth.getStarted') : t('auth.signIn')}
             </Button>
             <button
               type="button"
               onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
-              {mode === 'signup'
-                ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"}
+              {mode === 'signup' ? t('auth.alreadyHaveAccount') : t('auth.dontHaveAccount')}
             </button>
           </CardFooter>
         </form>

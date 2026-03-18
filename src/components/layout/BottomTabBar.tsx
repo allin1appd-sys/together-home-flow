@@ -1,21 +1,23 @@
 import { Home, CheckSquare, ShoppingCart, UtensilsCrossed, Plane, Menu } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { MoreDrawer } from './MoreDrawer';
 
-const tabs = [
-  { path: '/', label: 'Home', icon: Home },
-  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { path: '/groceries', label: 'Groceries', icon: ShoppingCart },
-  { path: '/meals', label: 'Meals', icon: UtensilsCrossed },
-  { path: '/trips', label: 'Trips', icon: Plane },
-];
-
 export function BottomTabBar() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const tabs = [
+    { path: '/', label: t('nav.home'), icon: Home },
+    { path: '/tasks', label: t('nav.tasks'), icon: CheckSquare },
+    { path: '/groceries', label: t('nav.groceries'), icon: ShoppingCart },
+    { path: '/meals', label: t('nav.meals'), icon: UtensilsCrossed },
+    { path: '/trips', label: t('nav.trips'), icon: Plane },
+  ];
 
   return (
     <>
@@ -42,7 +44,7 @@ export function BottomTabBar() {
             className="flex flex-col items-center gap-0.5 px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-lg"
           >
             <Menu className="h-5 w-5" />
-            <span className="font-medium">More</span>
+            <span className="font-medium">{t('nav.more')}</span>
           </button>
         </div>
       </nav>
