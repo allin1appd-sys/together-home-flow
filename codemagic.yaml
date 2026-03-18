@@ -10,6 +10,10 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.homehub.appname
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.homehub.appname
+        automatic_code_signing: true        
 
     scripts:
       - name: Install dependencies
@@ -30,9 +34,15 @@ workflows:
         script: |
           cd ios/App
           xcode-project use-profiles
-          xcode-project build-ipa \
-            --workspace App.xcworkspace \
-            --scheme App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive archive
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build
 
     artifacts:
       - ios/App/build/**/*.ipa
