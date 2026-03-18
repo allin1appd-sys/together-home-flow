@@ -1,64 +1,44 @@
 workflows:
-  android-capacitor:
-    name: Android Capacitor Build
+  ios-release:
+    name: iOS Release Build
     max_build_duration: 120
     instance_type: mac_mini_m2
 
     environment:
       node: 22
-      java: 21
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.homehub.appname
 
     scripts:
       - name: Install dependencies
-        script: |
-          npm install
+        script: npm install
 
       - name: Build web app
-        script: |
-          npm run build
+        script: npm run build
 
-      - name: Sync Capacitor Android
-        script: |
-          npx cap sync android
+      - name: Sync Capacitor iOS
+        script: npx cap sync ios
 
-      - name: Build Android debug APK
+      - name: Install CocoaPods
         script: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          cd ios/App
+          pod install
+
+      - name: Build IPA
+        script: |
+          cd ios/App
+          xcode-project use-profiles
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive archive
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build
 
     artifacts:
-      - android/app/build/outputs/**/*.apk
-
-  android-release:
-    name: Android Release AAB
-    max_build_duration: 120
-    instance_type: mac_mini_m2
-
-    environment:
-      node: 22
-      java: 21
-      android_signing:
-        - homehub_keystore
-
-    scripts:
-      - name: Install dependencies
-        script: |
-          npm install
-
-      - name: Build web app
-        script: |
-          npm run build
-
-      - name: Sync Capacitor Android
-        script: |
-          npx cap sync android
-
-      - name: Build Android release AAB
-        script: |
-          cd android
-          chmod +x gradlew
-          ./gradlew bundleRelease
-
-    artifacts:
-      - android/app/build/outputs/**/*.aab
+      - ios/App/build/**/*.ipa
