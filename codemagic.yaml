@@ -4,12 +4,12 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m2
 
+    integrations:
+      app_store_connect: Codemagic
+
     environment:
       node: 22
       xcode: latest
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.homehub.appname
 
     scripts:
       - name: Install dependencies
@@ -26,19 +26,21 @@ workflows:
           cd ios/App
           pod install
 
+      - name: Set up code signing
+        script: |
+          app-store-connect fetch-signing-files "com.homehub.appname" \
+            --type IOS_APP_STORE \
+            --create
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Build IPA
         script: |
           cd ios/App
-          xcode-project use-profiles
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive archive
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath build
+          xcode-project build-ipa \
+            --workspace App.xcworkspace \
+            --scheme App
 
     artifacts:
-      - ios/App/build/**/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
