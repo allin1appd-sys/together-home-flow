@@ -40,7 +40,7 @@ workflows:
             -archivePath build/App.xcarchive \
             archive \
             CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM="$(app-store-connect get-team-id)" \
+            DEVELOPMENT_TEAM="CTYHV65274" \
             -allowProvisioningUpdates
 
       - name: Export IPA
