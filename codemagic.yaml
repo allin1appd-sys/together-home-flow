@@ -10,6 +10,8 @@ workflows:
     environment:
       node: 22
       xcode: latest
+      groups:
+        - ios_creds
 
     scripts:
       - name: Install dependencies
@@ -29,94 +31,21 @@ workflows:
           keychain initialize
           keychain add-certificates
 
-          # Debug - show what was fetched
-          echo "=== Installed profiles ==="
-          ls ~/Library/MobileDevice/Provisioning\ Profiles/ || true
+          echo "=== Checking profiles ==="
+          ls ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
+          echo "=== Checking certificates ==="
+          ls ~/Library/MobileDevice/Certificates/ || echo "No certs found"
 
-          # Get the profile UUID
-          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
-          if [ -z "$PROFILE_PATH" ]; then
-            echo "ERROR: No provisioning profile found!"
-            exit 1
-          fi
-          PROFILE_UUID=$(basename "$PROFILE_PATH" .mobileprovision)
-          echo "Using profile UUID: $PROFILE_UUID"
-
-          # Write the UUID to a file so the next step can use it
-          echo "$PROFILE_UUID" > /tmp/profile_uuid.txt
-
-          # Fix the Xcode project settings directly
           cd ios/App
-          /usr/libexec/PlistBuddy -c "Set :objects:$(xcodebuild -project App.xcodeproj -scheme App -showBuildSettings 2>/dev/null | grep -m1 'TARGET_BUILD_DIR' | head -1 > /dev/null 2>&1; echo '')" App.xcodeproj/project.pbxproj 2>/dev/null || true
-
-          # Force all settings via sed
           sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = [^;]*;/PRODUCT_BUNDLE_IDENTIFIER = com.homehub.appname;/g' App.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' App.xcodeproj/project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = CTYHV65274;/g' App.xcodeproj/project.pbxproj
-
-          # Add provisioning profile to all build configurations
-          python3 - << 'PYEOF'
-          import re
-
-          with open("App.xcodeproj/project.pbxproj", "r") as f:
-              content = f.read()
-
-          # Read profile UUID
-          with open("/tmp/profile_uuid.txt", "r") as f:
-              uuid = f.read().strip()
-
-          # Add PROVISIONING_PROFILE_SPECIFIER after every PRODUCT_BUNDLE_IDENTIFIER line
-          content = re.sub(
-              r'(PRODUCT_BUNDLE_IDENTIFIER = com\.homehub\.appname;)',
-              r'\1\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "";' +
-              r'\n\t\t\t\tPROVISIONING_PROFILE = "' + uuid + '";' +
-              r'\n\t\t\t\t"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";',
-              content
-          )
-
-          with open("App.xcodeproj/project.pbxproj", "w") as f:
-              f.write(content)
-
-          print(f"Injected profile UUID {uuid} into project")
-          PYEOF
+          xcode-project use-profiles --project App.xcodeproj
 
       - name: Build IPA
         script: |
-          PROFILE_UUID=$(cat /tmp/profile_uuid.txt)
           cd ios/App
-          xcodebuild \
-            -project App.xcodeproj \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            archive \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=CTYHV65274 \
-            "CODE_SIGN_IDENTITY=Apple Distribution" \
-            "PROVISIONING_PROFILE=$PROFILE_UUID"
-
-      - name: Export IPA
-        script: |
-          cd ios/App
-          cat > exportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>CTYHV65274</string>
-              <key>signingStyle</key>
-              <string>manual</string>
-          </dict>
-          </plist>
-          EOF
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportOptionsPlist exportOptions.plist \
-            -exportPath build/ipa
+          xcode-project build-ipa \
+            --project App.xcodeproj \
+            --scheme App
 
     artifacts:
-      - ios/App/build/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
