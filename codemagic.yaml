@@ -21,6 +21,11 @@ workflows:
       - name: Sync Capacitor iOS
         script: npx cap sync ios
 
+      - name: Fix bundle ID
+        script: |
+          cd ios/App
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*;/PRODUCT_BUNDLE_IDENTIFIER = com.homehub.appname;/g' App.xcodeproj/project.pbxproj
+
       - name: Set up code signing
         script: |
           app-store-connect fetch-signing-files "com.homehub.appname" \
@@ -39,9 +44,7 @@ workflows:
             -configuration Release \
             -archivePath build/App.xcarchive \
             archive \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM="CTYHV65274" \
-            -allowProvisioningUpdates
+            COMPILER_INDEX_STORE_ENABLE=NO
 
       - name: Export IPA
         script: |
@@ -53,17 +56,27 @@ workflows:
           <dict>
               <key>method</key>
               <string>app-store</string>
+              <key>teamID</key>
+              <string>CTYHV65274</string>
               <key>uploadBitcode</key>
               <false/>
               <key>uploadSymbols</key>
               <true/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.homehub.appname</key>
+                  <string>match AppStore com.homehub.appname</string>
+              </dict>
           </dict>
           </plist>
           EOF
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
-            -exportPath build/ipa
+            -exportPath build/ipa \
+            -allowProvisioningUpdates
 
     artifacts:
       - ios/App/build/ipa/*.ipa
