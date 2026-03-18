@@ -33,8 +33,37 @@ workflows:
       - name: Build IPA
         script: |
           cd ios/App
-          xcode-project build-ipa \
-            --project App.xcodeproj \
-            --scheme App
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$(app-store-connect get-team-id)" \
+            -allowProvisioningUpdates
+
+      - name: Export IPA
+        script: |
+          cd ios/App
+          cat > exportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>uploadBitcode</key>
+              <false/>
+              <key>uploadSymbols</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportOptionsPlist exportOptions.plist \
+            -exportPath build/ipa
+
     artifacts:
-      - ios/App/build/ios/ipa/*.ipa
+      - ios/App/build/ipa/*.ipa
