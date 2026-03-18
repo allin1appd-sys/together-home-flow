@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check } from 'lucide-react';
 import { Task } from '@/types';
@@ -18,23 +19,24 @@ function groupByDate(tasks: Task[]): Record<string, Task[]> {
   return groups;
 }
 
-function formatDateLabel(dateStr: string): string {
-  if (dateStr === 'unknown') return 'Unknown';
-  const date = parseISO(dateStr);
-  if (isToday(date)) return 'Today';
-  if (isYesterday(date)) return 'Yesterday';
-  return format(date, 'MMM d, yyyy');
-}
-
 const CompletionHistory = ({ tasks, onToggle }: CompletionHistoryProps) => {
+  const { t } = useTranslation();
   const sorted = [...tasks].sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
   const grouped = groupByDate(sorted);
   const dateKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
+  function formatDateLabel(dateStr: string): string {
+    if (dateStr === 'unknown') return t('common.unknown');
+    const date = parseISO(dateStr);
+    if (isToday(date)) return t('common.today');
+    if (isYesterday(date)) return t('common.yesterday');
+    return format(date, 'MMM d, yyyy');
+  }
+
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground font-serif italic">No completed tasks yet — get started! 🚀</p>
+        <p className="text-muted-foreground font-serif italic">{t('tasks.noCompleted')}</p>
       </div>
     );
   }

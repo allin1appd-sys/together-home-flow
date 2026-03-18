@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useShoppingList } from '@/hooks/data/useShoppingList';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import EmptyState from '@/components/shared/EmptyState';
 const shoppingCategories: ShoppingCategory[] = ['produce', 'dairy', 'meat', 'bakery', 'frozen', 'beverages', 'snacks', 'cleaning', 'personal-care', 'other'];
 
 const ShoppingList = () => {
+  const { t } = useTranslation();
   const { householdId } = useAuth();
   const { shoppingList, isLoading, toggleShoppingItem, clearCompletedShopping, addShoppingItem, updateShoppingItem } = useShoppingList();
   const [quickAdd, setQuickAdd] = useState('');
@@ -68,19 +70,19 @@ const ShoppingList = () => {
     <PullToRefresh queryKeys={[['shopping_list', householdId!]]}>
       <div className="px-4 pt-6 space-y-4 pb-24">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Shopping List</h1>
-          {purchased.length > 0 && <Button size="sm" variant="outline" onClick={clearCompletedShopping}>Clear done</Button>}
+          <h1 className="text-2xl font-bold">{t('nav.shoppingList')}</h1>
+          {purchased.length > 0 && <Button size="sm" variant="outline" onClick={clearCompletedShopping}>{t('groceries.clearDone')}</Button>}
         </div>
         <div className="flex gap-2">
-          <Input placeholder="Quick add item..." value={quickAdd} onChange={(e) => setQuickAdd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()} className="flex-1" />
+          <Input placeholder={t('groceries.quickAddItem')} value={quickAdd} onChange={(e) => setQuickAdd(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleQuickAdd()} className="flex-1" />
           <Button size="icon" onClick={handleQuickAdd} disabled={!quickAdd.trim()}><Plus className="h-4 w-4" /></Button>
         </div>
         {estimatedTotal > 0 && (
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="p-3 flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Estimated total:</span>
-              <span className="text-sm font-bold text-primary ml-auto">${estimatedTotal.toFixed(2)}</span>
+              <span className="text-sm font-medium">{t('groceries.estimatedTotal')}</span>
+              <span className="text-sm font-bold text-primary ms-auto">${estimatedTotal.toFixed(2)}</span>
             </CardContent>
           </Card>
         )}
@@ -105,7 +107,7 @@ const ShoppingList = () => {
                       </CardContent>
                     </Card>
                   </button>
-                  <button onClick={() => openEdit(item)} className="absolute top-1 right-1 p-1 rounded-md bg-background/80 text-muted-foreground hover:text-foreground transition-colors">
+                  <button onClick={() => openEdit(item)} className="absolute top-1 end-1 p-1 rounded-md bg-background/80 text-muted-foreground hover:text-foreground transition-colors">
                     <Pencil className="h-3 w-3" />
                   </button>
                 </div>
@@ -114,14 +116,14 @@ const ShoppingList = () => {
           </div>
         ))}
         {active.length === 0 && purchased.length === 0 && (
-          <EmptyState icon={ShoppingCart} title="Shopping list is empty" description="Use the input above to add items" />
+          <EmptyState icon={ShoppingCart} title={t('groceries.shoppingListEmpty')} description={t('groceries.useInputAbove')} />
         )}
         {purchased.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">Got it ✓</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">{t('groceries.gotIt')}</p>
             <div className="space-y-1.5 opacity-50">
               {purchased.map((item) => (
-                <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="w-full text-left">
+                <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="w-full text-start">
                   <Card><CardContent className="p-3 flex items-center gap-3">
                     <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0"><Check className="h-3 w-3 text-primary-foreground" /></div>
                     <span className="text-sm line-through">{item.name}</span>
@@ -133,21 +135,21 @@ const ShoppingList = () => {
         )}
         <Sheet open={editSheet} onOpenChange={setEditSheet}>
           <SheetContent side="bottom" className="rounded-t-2xl">
-            <SheetHeader><SheetTitle>Edit Item</SheetTitle></SheetHeader>
+            <SheetHeader><SheetTitle>{t('groceries.editItem')}</SheetTitle></SheetHeader>
             <div className="space-y-4 pt-4 pb-6">
-              <div className="space-y-1.5"><Label>Name</Label><Input value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>{t('common.name')}</Label><Input value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
               <div className="flex gap-2">
-                <div className="space-y-1.5 w-20"><Label>Qty</Label><Input type="number" value={editQty} onChange={(e) => setEditQty(e.target.value)} /></div>
-                <div className="space-y-1.5 flex-1"><Label>Category</Label>
+                <div className="space-y-1.5 w-20"><Label>{t('groceries.qty')}</Label><Input type="number" value={editQty} onChange={(e) => setEditQty(e.target.value)} /></div>
+                <div className="space-y-1.5 flex-1"><Label>{t('common.category')}</Label>
                   <Select value={editCategory} onValueChange={(v) => setEditCategory(v as ShoppingCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{shoppingCategories.map((c) => <SelectItem key={c} value={c} className="capitalize">{c.replace('-', ' ')}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1.5"><Label>Estimated price</Label><Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} placeholder="0.00" /></div>
-              <div className="space-y-1.5"><Label>Note</Label><Input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Optional" /></div>
-              <Button className="w-full" onClick={handleSaveEdit} disabled={!editName.trim()}>Save Changes</Button>
+              <div className="space-y-1.5"><Label>{t('groceries.estimatedPrice')}</Label><Input type="number" step="0.01" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} placeholder="0.00" /></div>
+              <div className="space-y-1.5"><Label>{t('common.note')}</Label><Input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder={t('common.optional')} /></div>
+              <Button className="w-full" onClick={handleSaveEdit} disabled={!editName.trim()}>{t('common.saveChanges')}</Button>
             </div>
           </SheetContent>
         </Sheet>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGroceries } from '@/hooks/data/useGroceries';
 import { useShoppingList } from '@/hooks/data/useShoppingList';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,20 +27,18 @@ import { toast } from 'sonner';
 const storageLocations: StorageLocation[] = ['fridge', 'pantry', 'freezer', 'bathroom', 'cleaning'];
 const shoppingCategories: ShoppingCategory[] = ['produce', 'dairy', 'meat', 'bakery', 'frozen', 'beverages', 'snacks', 'cleaning', 'personal-care', 'other'];
 
-const statusColor = { fresh: 'bg-success', expiring: 'bg-warning', expired: 'bg-destructive' };
-const statusLabel = { fresh: 'Fresh', expiring: 'Expiring soon', expired: 'Expired' };
-
 const SWIPE_THRESHOLD = -100;
 
-const SwipeableGroceryCard = ({ item, onDecrement, onDelete, onEdit }: { item: GroceryItem; onDecrement: (id: string) => void; onDelete: (id: string) => void; onEdit: (item: GroceryItem) => void }) => {
+const SwipeableGroceryCard = ({ item, onDecrement, onDelete, onEdit, statusLabel }: { item: GroceryItem; onDecrement: (id: string) => void; onDelete: (id: string) => void; onEdit: (item: GroceryItem) => void; statusLabel: Record<string, string> }) => {
   const x = useMotionValue(0);
   const bgOpacity = useTransform(x, [-120, -60, 0], [1, 0.6, 0]);
   const trashScale = useTransform(x, [-120, -60, 0], [1.2, 0.8, 0]);
   const handleDragEnd = () => { if (x.get() < SWIPE_THRESHOLD) onDelete(item.id); };
+  const statusColor = { fresh: 'bg-success', expiring: 'bg-warning', expired: 'bg-destructive' };
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <motion.div className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 rounded-lg" style={{ opacity: bgOpacity }}>
+      <motion.div className="absolute inset-0 bg-destructive flex items-center justify-end pe-6 rounded-lg" style={{ opacity: bgOpacity }}>
         <motion.div style={{ scale: trashScale }}><Trash2 className="h-6 w-6 text-destructive-foreground" /></motion.div>
       </motion.div>
       <motion.div drag="x" dragConstraints={{ left: -150, right: 0 }} dragElastic={0.1} onDragEnd={handleDragEnd} style={{ x }} className="relative z-10">
@@ -64,6 +63,7 @@ const SwipeableGroceryCard = ({ item, onDecrement, onDelete, onEdit }: { item: G
 };
 
 const Groceries = () => {
+  const { t } = useTranslation();
   const { householdId } = useAuth();
   const { groceries, isLoading: gLoading, addGrocery, updateGrocery, removeGrocery, decrementGrocery } = useGroceries();
   const { shoppingList, isLoading: sLoading, addShoppingItem, toggleShoppingItem, clearCompletedShopping, suggestToShoppingList } = useShoppingList();
@@ -86,6 +86,8 @@ const Groceries = () => {
   const [sCategory, setSCategory] = useState<ShoppingCategory>('other');
   const [sNote, setSNote] = useState('');
   const [sPrice, setSPrice] = useState('');
+
+  const statusLabel: Record<string, string> = { fresh: t('groceries.fresh'), expiring: t('groceries.expiringSoon'), expired: t('groceries.expired') };
 
   const filtered = filterLocation === 'all' ? groceries : groceries.filter((g) => g.storageLocation === filterLocation);
   const activeShoppingItems = shoppingList.filter((i) => !i.isPurchased);
@@ -176,12 +178,12 @@ const Groceries = () => {
   return (
     <PullToRefresh queryKeys={[['groceries', householdId!], ['shopping_list', householdId!]]}>
       <div className="px-4 pt-6 space-y-4 pb-24">
-        <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">Groceries</h1></div>
+        <div className="flex items-center justify-between"><h1 className="text-2xl font-bold">{t('groceries.groceries')}</h1></div>
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="w-full">
-            <TabsTrigger value="inventory" className="flex-1">Inventory</TabsTrigger>
-            <TabsTrigger value="shopping" className="flex-1">Shopping List</TabsTrigger>
+            <TabsTrigger value="inventory" className="flex-1">{t('groceries.inventory')}</TabsTrigger>
+            <TabsTrigger value="shopping" className="flex-1">{t('groceries.shoppingList')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="inventory" className="space-y-3 mt-3">
@@ -190,8 +192,8 @@ const Groceries = () => {
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-warning" />
-                    <span className="text-sm font-medium">{suggestable.length} item{suggestable.length > 1 ? 's' : ''} running low</span>
-                    <Button size="sm" variant="outline" className="ml-auto h-7 text-xs" onClick={handleAddAllSuggestions}>Add all to list</Button>
+                    <span className="text-sm font-medium">{t('groceries.itemsRunningLow', { count: suggestable.length })}</span>
+                    <Button size="sm" variant="outline" className="ms-auto h-7 text-xs" onClick={handleAddAllSuggestions}>{t('groceries.addAllToList')}</Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {suggestable.map((g) => (
@@ -205,21 +207,21 @@ const Groceries = () => {
             )}
             <div className="flex items-center gap-2">
               <Select value={filterLocation} onValueChange={setFilterLocation}>
-                <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Location" /></SelectTrigger>
+                <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder={t('groceries.location')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All locations</SelectItem>
-                  {storageLocations.map((l) => <SelectItem key={l} value={l} className="capitalize">{l}</SelectItem>)}
+                  <SelectItem value="all">{t('groceries.allLocations')}</SelectItem>
+                  {storageLocations.map((l) => <SelectItem key={l} value={l} className="capitalize">{t(`groceries.${l}`)}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Button size="sm" onClick={openNewGrocery} className="ml-auto gap-1"><Plus className="h-4 w-4" /> Add</Button>
+              <Button size="sm" onClick={openNewGrocery} className="ms-auto gap-1"><Plus className="h-4 w-4" /> {t('common.add')}</Button>
             </div>
             {filtered.length === 0 ? (
-              <EmptyState icon={Package} title="Inventory is empty" description="Start tracking your groceries" actionLabel="Add item" onAction={openNewGrocery} />
+              <EmptyState icon={Package} title={t('groceries.inventoryEmpty')} description={t('groceries.startTracking')} actionLabel={t('groceries.addItem')} onAction={openNewGrocery} />
             ) : (
               <AnimatePresence>
                 {filtered.map((item) => (
                   <motion.div key={item.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }}>
-                    <SwipeableGroceryCard item={item} onDecrement={decrementGrocery} onDelete={(id) => setDeleteId(id)} onEdit={openEditGrocery} />
+                    <SwipeableGroceryCard item={item} onDecrement={decrementGrocery} onDelete={(id) => setDeleteId(id)} onEdit={openEditGrocery} statusLabel={statusLabel} />
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -231,16 +233,16 @@ const Groceries = () => {
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-3 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Estimated total:</span>
-                  <span className="text-sm font-bold text-primary ml-auto">${estimatedTotal.toFixed(2)}</span>
+                  <span className="text-sm font-medium">{t('groceries.estimatedTotal')}</span>
+                  <span className="text-sm font-bold text-primary ms-auto">${estimatedTotal.toFixed(2)}</span>
                 </CardContent>
               </Card>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{activeShoppingItems.length} item{activeShoppingItems.length !== 1 ? 's' : ''}</span>
+              <span className="text-sm text-muted-foreground">{t('groceries.items', { count: activeShoppingItems.length })}</span>
               <div className="flex gap-2">
-                {purchasedItems.length > 0 && <Button size="sm" variant="outline" onClick={clearCompletedShopping}>Clear done</Button>}
-                <Button size="sm" onClick={() => setShoppingSheet(true)} className="gap-1"><Plus className="h-4 w-4" /> Add</Button>
+                {purchasedItems.length > 0 && <Button size="sm" variant="outline" onClick={clearCompletedShopping}>{t('groceries.clearDone')}</Button>}
+                <Button size="sm" onClick={() => setShoppingSheet(true)} className="gap-1"><Plus className="h-4 w-4" /> {t('common.add')}</Button>
               </div>
             </div>
             {Object.entries(grouped).map(([cat, items]) => (
@@ -268,14 +270,14 @@ const Groceries = () => {
               </div>
             ))}
             {activeShoppingItems.length === 0 && purchasedItems.length === 0 && (
-              <EmptyState icon={ShoppingCart} title="Shopping list is empty" description="Add items to your shopping list" actionLabel="Add item" onAction={() => setShoppingSheet(true)} />
+              <EmptyState icon={ShoppingCart} title={t('groceries.shoppingListEmpty')} description={t('groceries.addItemsToList')} actionLabel={t('groceries.addItem')} onAction={() => setShoppingSheet(true)} />
             )}
             {purchasedItems.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">Got it ✓</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">{t('groceries.gotIt')}</p>
                 <div className="space-y-1.5 opacity-50">
                   {purchasedItems.map((item) => (
-                    <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="w-full text-left">
+                    <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="w-full text-start">
                       <Card><CardContent className="p-3 flex items-center gap-3">
                         <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0"><Check className="h-3 w-3 text-primary-foreground" /></div>
                         <span className="text-sm line-through">{item.name}</span>
@@ -290,48 +292,48 @@ const Groceries = () => {
 
         <Sheet open={grocerySheet} onOpenChange={setGrocerySheet}>
           <SheetContent side="bottom" className="rounded-t-2xl">
-            <SheetHeader><SheetTitle>{editingGrocery ? 'Edit Grocery Item' : 'Add Grocery Item'}</SheetTitle></SheetHeader>
+            <SheetHeader><SheetTitle>{editingGrocery ? t('groceries.editGroceryItem') : t('groceries.addGroceryItem')}</SheetTitle></SheetHeader>
             <div className="space-y-4 pt-4 pb-6">
-              <div className="space-y-1.5"><Label>Name</Label><Input placeholder="Item name" value={gName} onChange={(e) => setGName(e.target.value)} /></div>
+              <div className="space-y-1.5"><Label>{t('common.name')}</Label><Input placeholder={t('groceries.itemName')} value={gName} onChange={(e) => setGName(e.target.value)} /></div>
               <div className="flex gap-2">
-                <div className="space-y-1.5 w-20"><Label>Qty</Label><Input type="number" value={gQty} onChange={(e) => setGQty(e.target.value)} /></div>
-                <div className="space-y-1.5 flex-1"><Label>Unit</Label><Input placeholder="lbs, oz..." value={gUnit} onChange={(e) => setGUnit(e.target.value)} /></div>
+                <div className="space-y-1.5 w-20"><Label>{t('groceries.qty')}</Label><Input type="number" value={gQty} onChange={(e) => setGQty(e.target.value)} /></div>
+                <div className="space-y-1.5 flex-1"><Label>{t('groceries.unit')}</Label><Input placeholder="lbs, oz..." value={gUnit} onChange={(e) => setGUnit(e.target.value)} /></div>
               </div>
               <div className="flex gap-2">
-                <div className="space-y-1.5 flex-1"><Label>Location</Label>
+                <div className="space-y-1.5 flex-1"><Label>{t('groceries.location')}</Label>
                   <Select value={gLocation} onValueChange={(v) => setGLocation(v as StorageLocation)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{storageLocations.map((l) => <SelectItem key={l} value={l} className="capitalize">{l}</SelectItem>)}</SelectContent>
+                    <SelectContent>{storageLocations.map((l) => <SelectItem key={l} value={l} className="capitalize">{t(`groceries.${l}`)}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5 flex-1"><Label>Category</Label>
+                <div className="space-y-1.5 flex-1"><Label>{t('common.category')}</Label>
                   <Select value={gCategory} onValueChange={(v) => setGCategory(v as ShoppingCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{shoppingCategories.map((c) => <SelectItem key={c} value={c} className="capitalize">{c.replace('-', ' ')}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="space-y-1.5"><Label>Expiration date</Label><DatePicker value={gExpDate} onChange={setGExpDate} placeholder="No expiration" /></div>
-              <Button className="w-full" onClick={handleSaveGrocery}>{editingGrocery ? 'Save Changes' : 'Add to Inventory'}</Button>
+              <div className="space-y-1.5"><Label>{t('groceries.expirationDate')}</Label><DatePicker value={gExpDate} onChange={setGExpDate} placeholder={t('groceries.noExpiration')} /></div>
+              <Button className="w-full" onClick={handleSaveGrocery}>{editingGrocery ? t('common.saveChanges') : t('groceries.addToInventory')}</Button>
             </div>
           </SheetContent>
         </Sheet>
 
         <Sheet open={shoppingSheet} onOpenChange={setShoppingSheet}>
           <SheetContent side="bottom" className="rounded-t-2xl">
-            <SheetHeader><SheetTitle>Add Shopping Item</SheetTitle></SheetHeader>
+            <SheetHeader><SheetTitle>{t('groceries.addShoppingItem')}</SheetTitle></SheetHeader>
             <div className="space-y-4 pt-4 pb-6">
-              <Input placeholder="Item name" value={sName} onChange={(e) => setSName(e.target.value)} />
+              <Input placeholder={t('groceries.itemName')} value={sName} onChange={(e) => setSName(e.target.value)} />
               <div className="flex gap-2">
-                <Input type="number" placeholder="Qty" value={sQty} onChange={(e) => setSQty(e.target.value)} className="w-20" />
+                <Input type="number" placeholder={t('groceries.qty')} value={sQty} onChange={(e) => setSQty(e.target.value)} className="w-20" />
                 <Select value={sCategory} onValueChange={(v) => setSCategory(v as ShoppingCategory)}>
                   <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
                   <SelectContent>{shoppingCategories.map((c) => <SelectItem key={c} value={c} className="capitalize">{c.replace('-', ' ')}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <Input placeholder="Note (optional)" value={sNote} onChange={(e) => setSNote(e.target.value)} />
-              <Input type="number" step="0.01" placeholder="Estimated price (optional)" value={sPrice} onChange={(e) => setSPrice(e.target.value)} />
-              <Button className="w-full" onClick={handleAddShopping}>Add to List</Button>
+              <Input placeholder={t('groceries.noteOptional')} value={sNote} onChange={(e) => setSNote(e.target.value)} />
+              <Input type="number" step="0.01" placeholder={t('groceries.estimatedPrice')} value={sPrice} onChange={(e) => setSPrice(e.target.value)} />
+              <Button className="w-full" onClick={handleAddShopping}>{t('groceries.addToList')}</Button>
             </div>
           </SheetContent>
         </Sheet>
@@ -339,8 +341,8 @@ const Groceries = () => {
         <ConfirmDialog
           open={!!deleteId}
           onOpenChange={(open) => !open && setDeleteId(null)}
-          title="Delete item?"
-          description="This item will be permanently removed."
+          title={t('groceries.deleteItem')}
+          description={t('groceries.deleteItemDesc')}
           onConfirm={() => { if (deleteId) removeGrocery(deleteId); setDeleteId(null); }}
         />
       </div>

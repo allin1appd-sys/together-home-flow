@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNotes } from '@/hooks/data/useNotes';
 import { useAuth } from '@/hooks/useAuth';
 import { Note, NoteColor } from '@/types';
@@ -35,7 +36,7 @@ function NoteCard({ note, onEdit, onDelete, onTogglePin }: { note: Note; onEdit:
   const bg = useTransform(x, [-120, -60, 0], ['hsl(0 72% 51%)', 'hsl(0 72% 65%)', 'hsl(0 0% 100% / 0)']);
   return (
     <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={settle} className="relative overflow-hidden rounded-xl break-inside-avoid">
-      <motion.div className="absolute inset-0 flex items-center justify-end pr-4 rounded-xl" style={{ backgroundColor: bg }}><Trash2 className="h-5 w-5 text-white" /></motion.div>
+      <motion.div className="absolute inset-0 flex items-center justify-end pe-4 rounded-xl" style={{ backgroundColor: bg }}><Trash2 className="h-5 w-5 text-white" /></motion.div>
       <motion.div drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.3} style={{ x }} onDragEnd={(_, info) => { if (info.offset.x < -100) onDelete(); }} onClick={onEdit} className={cn('relative p-4 rounded-xl border border-border/40 cursor-pointer', colorBg(note.color))}>
         <div className="flex items-start justify-between gap-2 mb-1">
           <h3 className="font-semibold text-sm text-foreground line-clamp-2 flex-1">{note.title}</h3>
@@ -49,6 +50,7 @@ function NoteCard({ note, onEdit, onDelete, onTogglePin }: { note: Note; onEdit:
 }
 
 export default function Notes() {
+  const { t } = useTranslation();
   const { householdId } = useAuth();
   const { notes, isLoading, addNote, updateNote, deleteNote, toggleNotePin } = useNotes();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -79,28 +81,28 @@ export default function Notes() {
   return (
     <PullToRefresh queryKeys={[['notes', householdId!]]}>
       <div className="flex flex-col h-full">
-        <div className="px-4 pt-4 pb-2"><h1 className="text-2xl font-bold text-foreground">Notes</h1><p className="text-sm text-muted-foreground">Your shared family board</p></div>
+        <div className="px-4 pt-4 pb-2"><h1 className="text-2xl font-bold text-foreground">{t('notes.notes')}</h1><p className="text-sm text-muted-foreground">{t('notes.sharedBoard')}</p></div>
         <div className="flex-1 overflow-y-auto px-4 pb-24">
-          {sorted.length === 0 ? <EmptyState icon={StickyNote} title="No notes yet" description="Create sticky notes for your family" actionLabel="Add note" onAction={openNew} /> : (
+          {sorted.length === 0 ? <EmptyState icon={StickyNote} title={t('notes.noNotes')} description={t('notes.createSticky')} actionLabel={t('notes.addNote')} onAction={openNew} /> : (
             <div className="columns-2 gap-3 space-y-3 pt-2"><AnimatePresence mode="popLayout">{sorted.map(note => <NoteCard key={note.id} note={note} onEdit={() => openEdit(note)} onDelete={() => setDeleteId(note.id)} onTogglePin={() => toggleNotePin(note.id)} />)}</AnimatePresence></div>
           )}
         </div>
-        <button onClick={openNew} className="fixed bottom-24 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"><Plus className="h-6 w-6" /></button>
+        <button onClick={openNew} className="fixed bottom-24 end-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95 transition-transform"><Plus className="h-6 w-6" /></button>
 
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-            <SheetHeader><SheetTitle>{editing ? 'Edit Note' : 'New Note'}</SheetTitle></SheetHeader>
+            <SheetHeader><SheetTitle>{editing ? t('notes.editNote') : t('notes.newNote')}</SheetTitle></SheetHeader>
             <div className="space-y-4 pt-4">
-              <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <Textarea placeholder="Body (optional)" value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
-              <div><Label className="text-xs text-muted-foreground mb-2 block">Color</Label><div className="flex gap-2">{NOTE_COLORS.map(c => <button key={c.value} onClick={() => setColor(c.value)} className={cn('h-8 w-8 rounded-full border-2 transition-all', c.bg, color === c.value ? 'border-primary scale-110' : 'border-transparent')} />)}</div></div>
-              <div className="flex items-center justify-between"><Label htmlFor="pin-toggle" className="text-sm">Pin to top</Label><Switch id="pin-toggle" checked={isPinned} onCheckedChange={setIsPinned} /></div>
-              <Button className="w-full" onClick={handleSave} disabled={!title.trim()}>{editing ? 'Save Changes' : 'Add Note'}</Button>
+              <Input placeholder={t('common.title')} value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Textarea placeholder={t('notes.bodyOptional')} value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
+              <div><Label className="text-xs text-muted-foreground mb-2 block">{t('notes.color')}</Label><div className="flex gap-2">{NOTE_COLORS.map(c => <button key={c.value} onClick={() => setColor(c.value)} className={cn('h-8 w-8 rounded-full border-2 transition-all', c.bg, color === c.value ? 'border-primary scale-110' : 'border-transparent')} />)}</div></div>
+              <div className="flex items-center justify-between"><Label htmlFor="pin-toggle" className="text-sm">{t('notes.pinToTop')}</Label><Switch id="pin-toggle" checked={isPinned} onCheckedChange={setIsPinned} /></div>
+              <Button className="w-full" onClick={handleSave} disabled={!title.trim()}>{editing ? t('common.saveChanges') : t('notes.addNote')}</Button>
             </div>
           </SheetContent>
         </Sheet>
 
-        <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title="Delete note?" description="This note will be permanently removed." onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }} />
+        <ConfirmDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)} title={t('notes.deleteNote')} description={t('notes.deleteNoteDesc')} onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }} />
       </div>
     </PullToRefresh>
   );
