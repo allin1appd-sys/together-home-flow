@@ -30,15 +30,9 @@ workflows:
         script: |
           cd ios/App
           xcode-project use-profiles
-          xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive archive
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath build
+          xcode-project build-ipa \
+            --workspace App.xcworkspace \
+            --scheme App
 
     artifacts:
       - ios/App/build/**/*.ipa
