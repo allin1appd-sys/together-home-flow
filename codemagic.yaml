@@ -21,10 +21,15 @@ workflows:
       - name: Sync Capacitor iOS
         script: npx cap sync ios
 
-      - name: Fix bundle ID
+      - name: Fix bundle ID and signing
         script: |
           cd ios/App
+          # Fix bundle ID
           sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*;/PRODUCT_BUNDLE_IDENTIFIER = com.homehub.appname;/g' App.xcodeproj/project.pbxproj
+          # Disable automatic signing
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' App.xcodeproj/project.pbxproj
+          # Set team ID
+          sed -i '' 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = CTYHV65274;/g' App.xcodeproj/project.pbxproj
 
       - name: Set up code signing
         script: |
@@ -38,13 +43,18 @@ workflows:
       - name: Build IPA
         script: |
           cd ios/App
+          PROFILE_NAME=$(find ~/Library/MobileDevice/Provisioning\ Profiles -name "*.mobileprovision" -exec basename {} \; | head -1 | sed 's/.mobileprovision//')
           xcodebuild \
             -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -archivePath build/App.xcarchive \
             archive \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=CTYHV65274 \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER=""
 
       - name: Export IPA
         script: |
@@ -64,19 +74,13 @@ workflows:
               <true/>
               <key>signingStyle</key>
               <string>manual</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>com.homehub.appname</key>
-                  <string>match AppStore com.homehub.appname</string>
-              </dict>
           </dict>
           </plist>
           EOF
           xcodebuild -exportArchive \
             -archivePath build/App.xcarchive \
             -exportOptionsPlist exportOptions.plist \
-            -exportPath build/ipa \
-            -allowProvisioningUpdates
+            -exportPath build/ipa
 
     artifacts:
       - ios/App/build/ipa/*.ipa
