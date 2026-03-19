@@ -40,6 +40,15 @@ workflows:
           sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = [^;]*;/PRODUCT_BUNDLE_IDENTIFIER = com.homehub.appname;/g' App.xcodeproj/project.pbxproj
           xcode-project use-profiles --project App.xcodeproj
 
+      - name: Increment build number
+        script: |
+          cd ios/App
+          LATEST=$(app-store-connect get-latest-testflight-build-number com.homehub.appname || echo 0)
+          echo "Latest build number: $LATEST"
+          NEW_BUILD=$((LATEST + 1))
+          echo "New build number: $NEW_BUILD"
+          agvtool new-version -all $NEW_BUILD
+
       - name: Build IPA
         script: |
           cd ios/App
