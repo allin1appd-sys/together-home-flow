@@ -30,38 +30,16 @@ workflows:
             --create
           keychain initialize
           keychain add-certificates
-
-          echo "=== Checking profiles ==="
-          ls ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
-          echo "=== Checking certificates ==="
-          ls ~/Library/MobileDevice/Certificates/ || echo "No certs found"
-
           cd ios/App
           sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = [^;]*;/PRODUCT_BUNDLE_IDENTIFIER = com.homehub.appname;/g' App.xcodeproj/project.pbxproj
           xcode-project use-profiles --project App.xcodeproj
 
-      - name: Increment build number
+      - name: Build IPA
         script: |
-          LATEST=$(app-store-connect get-latest-testflight-build-number "com.homehub.appname" 2>/dev/null || echo 1)
-          NEW_BUILD=$((LATEST + 1))
-          echo "Setting build number to $NEW_BUILD"
-          # Update Info.plist directly
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" ios/App/App/Info.plist
-          # Also update project.pbxproj
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $NEW_BUILD;/g" ios/App/App.xcodeproj/project.pbxproj
-          # Verify
-          echo "Info.plist version:"
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
-
-      -- name: Build IPA
-        script: |
-          # Force build number to 2 since 1 was already uploaded
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 2" ios/App/App/Info.plist
           sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = 2;/g" ios/App/App.xcodeproj/project.pbxproj
-          
           echo "Build number set to:"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
-          
           cd ios/App
           xcode-project build-ipa \
             --project App.xcodeproj \
