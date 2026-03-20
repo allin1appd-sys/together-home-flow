@@ -53,21 +53,19 @@ workflows:
           echo "Info.plist version:"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
 
-      - name: Build IPA
+      -- name: Build IPA
         script: |
-          LATEST=$(app-store-connect get-latest-testflight-build-number "com.homehub.appname" 2>/dev/null || echo 1)
-          NEW_BUILD=$((LATEST + 1))
-          echo "Building with build number: $NEW_BUILD"
-
-          # Set it everywhere possible
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" ios/App/App/Info.plist
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = $NEW_BUILD;/g" ios/App/App.xcodeproj/project.pbxproj
-
+          # Force build number to 2 since 1 was already uploaded
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 2" ios/App/App/Info.plist
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = 2;/g" ios/App/App.xcodeproj/project.pbxproj
+          
+          echo "Build number set to:"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
+          
           cd ios/App
           xcode-project build-ipa \
             --project App.xcodeproj \
-            --scheme App \
-            --build-arguments="CURRENT_PROJECT_VERSION=$NEW_BUILD"
+            --scheme App
 
     artifacts:
       - ios/App/build/ios/ipa/*.ipa
