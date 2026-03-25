@@ -36,8 +36,8 @@ workflows:
 
       - name: Build IPA
         script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 100" ios/App/App/Info.plist
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = 100;/g" ios/App/App.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 101" ios/App/App/Info.plist
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = 101;/g" ios/App/App.xcodeproj/project.pbxproj
           echo "Build number set to:"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" ios/App/App/Info.plist
           cd ios/App
