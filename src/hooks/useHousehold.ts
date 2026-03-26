@@ -9,24 +9,13 @@ export function useHousehold() {
   const createHousehold = async (householdName: string = 'My Home') => {
     if (!user) throw new Error('Not authenticated');
 
-    const { data: household, error: hErr } = await supabase
-      .from('households')
-      .insert({ name: householdName, created_by: user.id })
-      .select()
-      .single();
-
-    if (hErr) throw hErr;
-
-    const { error: mErr } = await supabase
-      .from('household_members')
-      .insert({ household_id: household.id, user_id: user.id, role: 'owner' });
-
-    if (mErr) throw mErr;
+    const { data, error } = await supabase.rpc('create_household_for_user', { _name: householdName });
+    if (error) throw error;
 
     // Force re-fetch of householdId in AuthProvider
     queryClient.invalidateQueries();
     
-    return household.id;
+    return data;
   };
 
   const updateProfile = async (displayName: string) => {
