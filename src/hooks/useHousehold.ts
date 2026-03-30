@@ -9,7 +9,9 @@ export function useHousehold() {
   const createHousehold = async (householdName: string = 'My Home') => {
     if (!user) throw new Error('Not authenticated');
 
+    console.log('[useHousehold] calling RPC create_household_for_user, user:', user.id);
     const { data, error } = await supabase.rpc('create_household_for_user', { _name: householdName });
+    console.log('[useHousehold] RPC result:', { data, error });
     if (error) throw error;
 
     // Force re-fetch of householdId in AuthProvider
