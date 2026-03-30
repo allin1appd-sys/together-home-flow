@@ -29,10 +29,15 @@ export default function OnboardingSheet() {
   const handleFinish = async () => {
     setLoading(true);
     try {
-      if (!householdId) await createHousehold();
+      if (!householdId) {
+        console.log('[Onboarding] calling createHousehold...');
+        const result = await createHousehold();
+        console.log('[Onboarding] createHousehold result:', result);
+      }
       setOpen(false);
       window.location.reload();
     } catch (err: any) {
+      console.error('[Onboarding] createHousehold error:', err);
       toast.error(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
