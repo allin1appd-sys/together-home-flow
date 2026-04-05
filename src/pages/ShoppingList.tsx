@@ -4,6 +4,7 @@ import { useShoppingList } from '@/hooks/data/useShoppingList';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, ShoppingCart, DollarSign, Plus, Pencil } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
