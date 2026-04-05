@@ -4,6 +4,7 @@ import { useShoppingList } from '@/hooks/data/useShoppingList';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Check, ShoppingCart, DollarSign, Plus, Pencil } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,15 +30,15 @@ const ShoppingList = () => {
   const [editCategory, setEditCategory] = useState<ShoppingCategory>('other');
   const [editNote, setEditNote] = useState('');
 
-  const active = shoppingList.filter((i) => !i.isPurchased);
   const purchased = shoppingList.filter((i) => i.isPurchased);
 
   const grouped = shoppingCategories.reduce((acc, cat) => {
-    const items = active.filter((i) => i.category === cat);
+    const items = shoppingList.filter((i) => i.category === cat);
     if (items.length > 0) acc[cat] = items;
     return acc;
-  }, {} as Record<string, typeof active>);
+  }, {} as Record<string, typeof shoppingList>);
 
+  const active = shoppingList.filter((i) => !i.isPurchased);
   const estimatedTotal = active.reduce((sum, i) => sum + (i.estimatedPrice || 0), 0);
 
   const handleQuickAdd = () => {
@@ -93,11 +94,13 @@ const ShoppingList = () => {
               {items.map((item) => (
                 <div key={item.id} className="snap-start shrink-0 relative">
                   <button onClick={() => toggleShoppingItem(item.id)}>
-                    <Card className="w-[140px] hover:bg-accent/50 transition-colors">
+                    <Card className={cn('w-[140px] transition-colors', item.isPurchased ? 'opacity-50' : 'hover:bg-accent/50')}>
                       <CardContent className="p-3 space-y-1">
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 rounded-full border-2 border-primary flex items-center justify-center shrink-0" />
-                          <span className="text-sm font-medium truncate">{item.name}</span>
+                          <div className={cn('h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0', item.isPurchased ? 'bg-primary border-primary' : 'border-primary')}>
+                            {item.isPurchased && <Check className="h-3 w-3 text-primary-foreground" />}
+                          </div>
+                          <span className={cn('text-sm font-medium truncate', item.isPurchased && 'line-through text-muted-foreground')}>{item.name}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">×{item.quantity}</span>
@@ -107,31 +110,18 @@ const ShoppingList = () => {
                       </CardContent>
                     </Card>
                   </button>
-                  <button onClick={() => openEdit(item)} className="absolute top-1 end-1 p-1 rounded-md bg-background/80 text-muted-foreground hover:text-foreground transition-colors">
-                    <Pencil className="h-3 w-3" />
-                  </button>
+                  {!item.isPurchased && (
+                    <button onClick={() => openEdit(item)} className="absolute top-1 end-1 p-1 rounded-md bg-background/80 text-muted-foreground hover:text-foreground transition-colors">
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         ))}
-        {active.length === 0 && purchased.length === 0 && (
+        {shoppingList.length === 0 && (
           <EmptyState icon={ShoppingCart} title={t('groceries.shoppingListEmpty')} description={t('groceries.useInputAbove')} />
-        )}
-        {purchased.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">{t('groceries.gotIt')}</p>
-            <div className="space-y-1.5 opacity-50">
-              {purchased.map((item) => (
-                <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="w-full text-start">
-                  <Card><CardContent className="p-3 flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0"><Check className="h-3 w-3 text-primary-foreground" /></div>
-                    <span className="text-sm line-through">{item.name}</span>
-                  </CardContent></Card>
-                </button>
-              ))}
-            </div>
-          </div>
         )}
         <Sheet open={editSheet} onOpenChange={setEditSheet}>
           <SheetContent side="bottom" className="rounded-t-2xl">

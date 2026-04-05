@@ -4,13 +4,11 @@ import { useTasks } from '@/hooks/data/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus, ClipboardList } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Task, Priority, TaskCategory } from '@/types';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskSheet from '@/components/tasks/TaskSheet';
-import CompletionHistory from '@/components/tasks/CompletionHistory';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
@@ -30,10 +28,9 @@ const Tasks = () => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const activeTasks = tasks.filter((t2) => !t2.isCompleted);
-  const completedTasks = tasks.filter((t2) => t2.isCompleted);
+  const completedCount = tasks.filter((t2) => t2.isCompleted).length;
 
-  let filtered = activeTasks;
+  let filtered = [...tasks];
   if (filterPriority !== 'all') filtered = filtered.filter((t2) => t2.priority === filterPriority);
   if (filterCategory !== 'all') filtered = filtered.filter((t2) => t2.category === filterCategory);
   filtered.sort((a, b) => {
@@ -58,53 +55,46 @@ const Tasks = () => {
       <div className="px-4 pt-6 space-y-4 pb-24">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">{t('tasks.tasks')}</h1>
-          <Button size="sm" onClick={handleOpenNew} className="gap-1"><Plus className="h-4 w-4" /> {t('common.add')}</Button>
+          <div className="flex gap-2">
+            {completedCount > 0 && (
+              <Button size="sm" variant="outline" onClick={() => {
+                tasks.filter(t2 => t2.isCompleted).forEach(t2 => deleteTask(t2.id));
+              }}>{t('groceries.clearDone')}</Button>
+            )}
+            <Button size="sm" onClick={handleOpenNew} className="gap-1"><Plus className="h-4 w-4" /> {t('common.add')}</Button>
+          </div>
         </div>
 
-        <Tabs defaultValue="active" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="active" className="flex-1">{t('common.active')} ({activeTasks.length})</TabsTrigger>
-            <TabsTrigger value="history" className="flex-1">{t('tasks.history')} ({completedTasks.length})</TabsTrigger>
-          </TabsList>
+        <div className="flex gap-2">
+          <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder={t('tasks.priority')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('tasks.allPriorities')}</SelectItem>
+              {priorities.map((p) => <SelectItem key={p} value={p} className="capitalize">{t(`tasks.${p}`)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder={t('common.category')} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('tasks.allCategories')}</SelectItem>
+              {categories.map((c) => <SelectItem key={c} value={c} className="capitalize">{t(`tasks.${c}`)}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
-          <TabsContent value="active" className="space-y-3 mt-3">
-            <div className="flex gap-2">
-              <Select value={filterPriority} onValueChange={setFilterPriority}>
-                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder={t('tasks.priority')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('tasks.allPriorities')}</SelectItem>
-                  {priorities.map((p) => <SelectItem key={p} value={p} className="capitalize">{t(`tasks.${p}`)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder={t('common.category')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('tasks.allCategories')}</SelectItem>
-                  {categories.map((c) => <SelectItem key={c} value={c} className="capitalize">{t(`tasks.${c}`)}</SelectItem>)}
-                </SelectContent>
-              </Select>
+        <AnimatePresence>
+          {filtered.length === 0 ? (
+            <EmptyState icon={ClipboardList} title={t('tasks.noTasks')} description={t('tasks.noTasksDesc')} actionLabel={t('tasks.addTask')} onAction={handleOpenNew} />
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((task) => (
+                <motion.div key={task.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }} transition={spring}>
+                  <TaskCard task={task} onToggle={toggleTask} onDelete={(id) => setDeleteId(id)} onEdit={handleEdit} onToggleSubTask={toggleSubTask} />
+                </motion.div>
+              ))}
             </div>
-
-            <AnimatePresence>
-              {filtered.length === 0 ? (
-                <EmptyState icon={ClipboardList} title={t('tasks.noTasks')} description={t('tasks.noTasksDesc')} actionLabel={t('tasks.addTask')} onAction={handleOpenNew} />
-              ) : (
-                <div className="space-y-2">
-                  {filtered.map((task) => (
-                    <motion.div key={task.id} layout initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0, height: 0 }} transition={spring}>
-                      <TaskCard task={task} onToggle={toggleTask} onDelete={(id) => setDeleteId(id)} onEdit={handleEdit} onToggleSubTask={toggleSubTask} />
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </AnimatePresence>
-            {filtered.length > 0 && <p className="text-xs text-muted-foreground text-center pt-2">{t('common.swipeLeftComplete')}</p>}
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-3">
-            <CompletionHistory tasks={completedTasks} onToggle={toggleTask} />
-          </TabsContent>
-        </Tabs>
+          )}
+        </AnimatePresence>
 
         <TaskSheet open={sheetOpen} onOpenChange={setSheetOpen} editingTask={editingTask} onAdd={addTask} onUpdate={updateTask} />
 
