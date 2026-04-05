@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Task, Priority, TaskCategory } from '@/types';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskSheet from '@/components/tasks/TaskSheet';
-import CompletionHistory from '@/components/tasks/CompletionHistory';
 import ConfirmDialog from '@/components/shared/ConfirmDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import PullToRefresh from '@/components/shared/PullToRefresh';
