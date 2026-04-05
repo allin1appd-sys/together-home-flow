@@ -4,7 +4,6 @@ import { useTasks } from '@/hooks/data/useTasks';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus, ClipboardList } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Task, Priority, TaskCategory } from '@/types';
