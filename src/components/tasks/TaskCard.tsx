@@ -66,8 +66,8 @@ const TaskCard = ({ task, onToggle, onDelete, onEdit, onToggleSubTask }: TaskCar
                 {task.isCompleted && <Check className="h-3 w-3 text-primary" />}
               </button>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium truncate">{task.title}</span>
+              <div className="flex items-center gap-2">
+                  <span className={cn('text-sm font-medium truncate', task.isCompleted && 'line-through text-muted-foreground')}>{task.title}</span>
                   <Badge className={cn('text-[10px] px-1.5 py-0 shrink-0', priorityColor[task.priority])}>{task.priority}</Badge>
                 </div>
                 {task.description && (
