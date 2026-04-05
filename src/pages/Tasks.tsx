@@ -30,10 +30,9 @@ const Tasks = () => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const activeTasks = tasks.filter((t2) => !t2.isCompleted);
-  const completedTasks = tasks.filter((t2) => t2.isCompleted);
+  const completedCount = tasks.filter((t2) => t2.isCompleted).length;
 
-  let filtered = activeTasks;
+  let filtered = [...tasks];
   if (filterPriority !== 'all') filtered = filtered.filter((t2) => t2.priority === filterPriority);
   if (filterCategory !== 'all') filtered = filtered.filter((t2) => t2.category === filterCategory);
   filtered.sort((a, b) => {
