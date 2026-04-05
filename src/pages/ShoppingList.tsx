@@ -29,15 +29,15 @@ const ShoppingList = () => {
   const [editCategory, setEditCategory] = useState<ShoppingCategory>('other');
   const [editNote, setEditNote] = useState('');
 
-  const active = shoppingList.filter((i) => !i.isPurchased);
   const purchased = shoppingList.filter((i) => i.isPurchased);
 
   const grouped = shoppingCategories.reduce((acc, cat) => {
-    const items = active.filter((i) => i.category === cat);
+    const items = shoppingList.filter((i) => i.category === cat);
     if (items.length > 0) acc[cat] = items;
     return acc;
-  }, {} as Record<string, typeof active>);
+  }, {} as Record<string, typeof shoppingList>);
 
+  const active = shoppingList.filter((i) => !i.isPurchased);
   const estimatedTotal = active.reduce((sum, i) => sum + (i.estimatedPrice || 0), 0);
 
   const handleQuickAdd = () => {
