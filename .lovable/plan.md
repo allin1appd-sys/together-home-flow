@@ -1,65 +1,36 @@
 
 
-## Fix: Household Creation RLS Violation
+## Populate App with Demo Data
 
-### Root Cause
+### Overview
+Insert realistic demo data across all modules for all three existing households, so any user who logs in sees a fully populated, living app.
 
-In `useHousehold.ts`, `createHousehold` does:
-1. `INSERT INTO households ... .select().single()` — INSERT works (RLS allows `created_by = auth.uid()`), but the chained `.select()` fails because the SELECT policy requires `is_household_member(id)` — and the user isn't a member yet
-2. This causes an RLS violation error before step 2 (inserting into `household_members`) ever runs
+### Data to Insert
 
-### Fix: Create a database function
+**Per household** (3 households × all modules):
 
-Create a `create_household_for_user` SECURITY DEFINER function that atomically:
-1. Creates the household
-2. Adds the creator as owner in `household_members`
-3. Returns the household ID
+1. **Tasks** (~8 each) — mix of priorities, categories, some completed, due dates spread across today/this week/next week
+2. **Groceries** (~10 each) — items in fridge/pantry/freezer, with expiration dates (some expiring soon, some fresh, some expired)
+3. **Reminders** (~6 each) — bills, appointments, renewals with varied due dates
+4. **Transactions** (~15 each) — income + expenses across categories for the current month to populate the budget widget
+5. **Budget Limits** (~5 each) — category spending limits
+6. **Meal Plans** (~6 each) — today + next few days, breakfast/lunch/dinner
+7. **Recipes** (~4 each) — with ingredients
+8. **Trips** (1-2 each) — one upcoming, one completed
+9. **Notes** (~4 each) — pinned and unpinned, different colors
+10. **Maintenance Tasks** (~4 each) — HVAC, plumbing, lawn, etc.
+11. **Shopping List** (~6 each) — groceries to buy with estimated prices
+12. **Family Members** (~3 each) — household members for assignment
 
-This bypasses the RLS timing issue entirely since the function runs with elevated privileges.
+### Technical Details
 
-### Changes
+- All inserts use `psql` via the insert tool (data operations, not schema changes)
+- Household IDs: `8c37684d-...`, `b4c059e6-...`, `313afee9-...`
+- Dates are relative to today (2026-04-05) so dashboard widgets show relevant content
+- Existing data in household `b4c059e6` will be preserved (additive inserts only)
+- Uses realistic names, amounts, and categories
 
-**1. Database migration** — new function:
-```sql
-CREATE OR REPLACE FUNCTION public.create_household_for_user(_name text DEFAULT 'My Home')
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-DECLARE
-  _household_id uuid;
-  _user_id uuid := auth.uid();
-BEGIN
-  IF _user_id IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
-  END IF;
-
-  -- Check if user already belongs to a household
-  IF EXISTS (SELECT 1 FROM household_members WHERE user_id = _user_id) THEN
-    RAISE EXCEPTION 'Already in a household';
-  END IF;
-
-  -- Create household
-  INSERT INTO households (name, created_by)
-  VALUES (_name, _user_id)
-  RETURNING id INTO _household_id;
-
-  -- Add creator as owner
-  INSERT INTO household_members (household_id, user_id, role)
-  VALUES (_household_id, _user_id, 'owner');
-
-  RETURN _household_id;
-END;
-$$;
-```
-
-**2. Update `src/hooks/useHousehold.ts`** — replace the two separate inserts with a single RPC call:
-```typescript
-const { data, error } = await supabase.rpc('create_household_for_user', { _name: householdName });
-if (error) throw error;
-return data;
-```
-
-This is a minimal, surgical fix — only 1 migration + 1 file edit.
+### Estimated Scope
+- Single large SQL insert script covering all tables
+- No code changes needed — just data population
 
