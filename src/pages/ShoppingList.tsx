@@ -120,23 +120,8 @@ const ShoppingList = () => {
             </div>
           </div>
         ))}
-        {active.length === 0 && purchased.length === 0 && (
+        {shoppingList.length === 0 && (
           <EmptyState icon={ShoppingCart} title={t('groceries.shoppingListEmpty')} description={t('groceries.useInputAbove')} />
-        )}
-        {purchased.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">{t('groceries.gotIt')}</p>
-            <div className="space-y-1.5 opacity-50">
-              {purchased.map((item) => (
-                <button key={item.id} onClick={() => toggleShoppingItem(item.id)} className="w-full text-start">
-                  <Card><CardContent className="p-3 flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shrink-0"><Check className="h-3 w-3 text-primary-foreground" /></div>
-                    <span className="text-sm line-through">{item.name}</span>
-                  </CardContent></Card>
-                </button>
-              ))}
-            </div>
-          </div>
         )}
         <Sheet open={editSheet} onOpenChange={setEditSheet}>
           <SheetContent side="bottom" className="rounded-t-2xl">
