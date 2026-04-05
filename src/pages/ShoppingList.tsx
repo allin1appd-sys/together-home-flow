@@ -93,11 +93,13 @@ const ShoppingList = () => {
               {items.map((item) => (
                 <div key={item.id} className="snap-start shrink-0 relative">
                   <button onClick={() => toggleShoppingItem(item.id)}>
-                    <Card className="w-[140px] hover:bg-accent/50 transition-colors">
+                    <Card className={cn('w-[140px] transition-colors', item.isPurchased ? 'opacity-50' : 'hover:bg-accent/50')}>
                       <CardContent className="p-3 space-y-1">
                         <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 rounded-full border-2 border-primary flex items-center justify-center shrink-0" />
-                          <span className="text-sm font-medium truncate">{item.name}</span>
+                          <div className={cn('h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0', item.isPurchased ? 'bg-primary border-primary' : 'border-primary')}>
+                            {item.isPurchased && <Check className="h-3 w-3 text-primary-foreground" />}
+                          </div>
+                          <span className={cn('text-sm font-medium truncate', item.isPurchased && 'line-through text-muted-foreground')}>{item.name}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-muted-foreground">×{item.quantity}</span>
@@ -107,9 +109,11 @@ const ShoppingList = () => {
                       </CardContent>
                     </Card>
                   </button>
-                  <button onClick={() => openEdit(item)} className="absolute top-1 end-1 p-1 rounded-md bg-background/80 text-muted-foreground hover:text-foreground transition-colors">
-                    <Pencil className="h-3 w-3" />
-                  </button>
+                  {!item.isPurchased && (
+                    <button onClick={() => openEdit(item)} className="absolute top-1 end-1 p-1 rounded-md bg-background/80 text-muted-foreground hover:text-foreground transition-colors">
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
